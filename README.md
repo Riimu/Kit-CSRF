@@ -13,7 +13,7 @@ API documentation for the classes can be generated using apigen.
 In order to provide secure random tokens, the library requires the following PHP
 extensions to provide secure random bytes:
 
-  * [http://www.php.net/manual/en/book.openssl.php|OpenSSL]
+  * [OpenSSL](http://www.php.net/manual/en/book.openssl.php)
 
 ## Usage ##
 
@@ -73,9 +73,12 @@ provide the CSRF token using some other method, you may also call
 return True if the token is valid, false if not.
 
 Note that each call to `getToken()` will return a different string, because they
-are always encrypted using another random string. For performance purposes, it's
+are always encrypted using new random string. For performance purposes, it's
 recommended to store the returned value if you need to output it into multiple
 forms.
+
+For regenerating the token (such as when the user logs in), you can use the
+`regenerateToken()` method.
 
 ## Anatomy of CSRF tokens ##
 
@@ -96,3 +99,6 @@ advantage of the CSRF token.
 ## Credits ##
 
 This library is copyright 2014 to Riikka Kalliomäki
+
+Implementation of this library is based on Go library
+[nosurf](https://github.com/justinas/nosurf) by Justinas Stankevicius
