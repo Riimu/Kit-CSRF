@@ -1,0 +1,24 @@
+{
+    "name": "riimu/kit-csrf",
+    "type": "library",
+    "description": "Secure and simple CSRF library with HTTPS BREACH and timing attack protections.",
+    "keywords": ["csrf", "security"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Riikka Kalliomäki",
+            "email": "riikka.kalliomaki@gmail.com",
+            "homepage": "http://riimu.net",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "ext-openssl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Riimu\\Kit\\CSRF\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,5 @@
+source: src
+destination: apidoc
+charset: UTF-8
+title: kit-csrf
+report: apidoc/report.txt
