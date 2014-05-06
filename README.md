@@ -1,17 +1,17 @@
 # Secure CSRF Prevention #
 
-This library provides a simple and secure way to provide CSRF prevention with
-use of sessions or cookies (using double posting). In order to provide more
-secure environment, the library is protected against timing attacks for the
-CSRF tokens and uses a simple XOR encyption on the tokens to avoid HTTPS BREACH
-attacks.
+This library provides a simple and secure way to prevent Cross-Site Request
+Forgery. The CSRF token can be stored using cookies (i.e. double submit cookies)
+or sessions. In order to provide a more secure way to handle CSRF tokens, the
+library has been protected against timing attacks and the provided tokens are
+always encrypted to avoid BREACH attacks.
 
 API documentation for the classes can be generated using apigen.
 
 ## Requirements ##
 
-In order to provide secure random tokens, the library requires the following PHP
-extensions to provide secure random bytes:
+For generating secure random tokens and encryptions keys, the following PHP
+extension is required.
 
   * [OpenSSL](http://www.php.net/manual/en/book.openssl.php)
 
@@ -61,23 +61,21 @@ by setting the $throw parameter to true, in which case it will throw a
 When using AJAX requests and especially in the case of using PUT and DELETE
 request, the CSRF token can also provided using a `X-CSRF-Token` header.
 
-By default, the library will use double posting, which means the actual CSRF
-token is stored in a cookie in the browser in order to avoid session dependency.
-However, if you wish to use sessions, simply set `setUseCookies($enabled)` to
-false, in which case the CSRF token is stored to session variable named
-'csrf_token'.
+In order to avoid session dependency by default, the CSRF token is stored in
+cookie named 'csrf_token'. However, if you wish to store the token in sessions
+instead, you can set the `setUseCookies($enabled)` to false.
 
 If you want to implement custom triggers on when to validate the request or
 provide the CSRF token using some other method, you may also call
 `validateToken($token)` with the encrypted token to validate it. The method will
 return True if the token is valid, false if not.
 
-Note that each call to `getToken()` will return a different string, because they
-are always encrypted using new random string. For performance purposes, it's
-recommended to store the returned value if you need to output it into multiple
-forms.
+To prevent BREACH attacks, the tokens returned by `getToken()` are always
+encrypted. Because of this, each call to that method will return a new string,
+since a new encryption key is always generated. They are all valid CSRF tokens
+until the token is regenerated, of course.
 
-For regenerating the token (such as when the user logs in), you can use the
+For regenerating the token (for example, when the user logs in), you can use the
 `regenerateToken()` method.
 
 ## Anatomy of CSRF tokens ##
@@ -87,14 +85,14 @@ provided by the `openssl_random_pseudo_bytes()` function. However, as random
 byte string may generate problems in different storage methods, the cookie or
 session value is always stored as a byte64 encoded string.
 
-Similarly, the `getToken()` will return a byte64 encoded string and the
-`validateToken($token)` method expects a byte64 encoded string. However, when
+Similarly, the `getToken()` will return a base64 encoded string and the
+`validateToken($token)` method expects a base64 encoded string. However, when
 the token is generated using the `getToken()` method, the actual string is 64
 bytes long. This is because it includes the encryption key used to encrypt the
 actual token that follows using a simple XOR encryption. A new random
 encryption key is generated using `openssl_random_pseudo_bytes()` each time the
-method is called. This is used to avoid possible HTTPS BREACH attacks taking
-advantage of the CSRF token.
+method is called. This is used to prevent BREACH attacks taking advantage of
+the CSRF token.
 
 ## Credits ##
 
