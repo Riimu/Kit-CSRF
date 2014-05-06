@@ -83,7 +83,7 @@ For regenerating the token (for example, when the user logs in), you can use the
 By default, the library uses 32 byte CSRF tokens. These are random byte strings
 provided by the `openssl_random_pseudo_bytes()` function. However, as random
 byte string may generate problems in different storage methods, the cookie or
-session value is always stored as a byte64 encoded string.
+session value is always stored as a base64 encoded string.
 
 Similarly, the `getToken()` will return a base64 encoded string and the
 `validateToken($token)` method expects a base64 encoded string. However, when
