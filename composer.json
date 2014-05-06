@@ -1,7 +1,7 @@
 {
     "name": "riimu/kit-csrf",
     "type": "library",
-    "description": "Secure and simple CSRF library with HTTPS BREACH and timing attack protections.",
+    "description": "Secure and simple CSRF library protected against timing and BREACH attacks.",
     "keywords": ["csrf", "security"],
     "license": "MIT",
     "authors": [
