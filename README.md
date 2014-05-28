@@ -20,6 +20,22 @@ extension is required.
 
   * [OpenSSL](http://www.php.net/manual/en/book.openssl.php)
 
+## Installation ##
+
+This library can be easily installed using [Composer](http://getcomposer.org/)
+by including the following dependency in your `composer.json`:
+
+```json
+{
+    "require": {
+        "riimu/kit-csrf": "1.*"
+    }
+}
+```
+
+The library will be the installed by running `composer install` and the classes
+can be loaded with simply including the `vendor/autoload.php` file.
+
 ## Usage ##
 
 Implementation of this library is intended to be as easy as possible. At the
