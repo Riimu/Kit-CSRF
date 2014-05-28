@@ -1,12 +1,13 @@
 # Secure CSRF Prevention #
 
 This library provides a simple and secure way to prevent Cross-Site Request
-Forgery. The CSRF token can be stored using cookies (i.e. double submit cookies)
-or sessions. In order to provide a more secure way to handle CSRF tokens, the
-library has been protected against timing attacks and the provided tokens are
-always encrypted to avoid BREACH attacks.
+Forgery by using CSRF tokens that are passed via hidden fields in forms and also
+stored in cookies or sessions. In order to provide a more secure way to handle
+CSRF tokens, the library has been protected against timing attacks and the
+provided tokens are always encrypted using random keys to avoid BREACH attacks.
 
-API documentation for the classes can be generated using apigen.
+API documentation is [available](http://kit.riimu.net/api/csrf/) and it can be
+generated using ApiGen.
 
 [![Build Status](https://travis-ci.org/Riimu/Kit-CSRF.svg?branch=master)](https://travis-ci.org/Riimu/Kit-CSRF)
 [![Coverage Status](https://coveralls.io/repos/Riimu/Kit-CSRF/badge.png?branch=master)](https://coveralls.io/r/Riimu/Kit-CSRF?branch=master)
