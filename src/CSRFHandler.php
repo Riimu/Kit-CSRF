@@ -5,10 +5,10 @@ namespace Riimu\Kit\CSRF;
 /**
  * CSRF token validator and generator.
  *
- * CSRFHandler provides a simple way to generate and validate CSRF tokens in
- * a secure manner accounting for timing and BREACH attacks. The class also uses
- * openssl_random_pseudo_bytes to securely generate the random tokens and
- * unique encryption tokens for each request.
+ * CSRFHandler provides a simple way to generate and validate CSRF tokens.
+ * Precautions have been taken to avoid timing and BREACH attacks. For secure
+ * random tokens, the library uses openssl_random_pseudo_bytes to generate
+ * tokens and random encryption keys for each request.
  *
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2014, Riikka Kalliomäki
@@ -17,34 +17,34 @@ namespace Riimu\Kit\CSRF;
 class CSRFHandler
 {
     /**
-     * List of request methods to validate automatically.
-     * @var array
+     * List of request methods validated by validateRequest() method.
+     * @var string[]
      */
-    private $validatedMethods = ['POST', 'PUT', 'DELETE'];
+    protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
+
+    /**
+     * Number of bytes used in CSRF tokens.
+     * @var integer
+     */
+    protected $tokenLength = 32;
 
     /**
      * Name of the cookie or session variable used to store the csrf token.
      * @var string
      */
-    private $storageName = 'csrf_token';
+    protected $storageName = 'csrf_token';
 
     /**
      * Name of the input used to send the csrf token in forms.
      * @var string
      */
-    private $formFieldName = 'csrf_token';
+    protected $formFieldName = 'csrf_token';
 
     /**
      * Name of the custom header used to send the csrf token.
      * @var string
      */
-    private $headerName = 'X-CSRF-Token';
-
-    /**
-     * Length of the csrf token in bytes.
-     * @var int
-     */
-    private $tokenLength = 32;
+    protected $headerName = 'X-CSRF-Token';
 
     /**
      * Whether to use cookies or session to store the actual csrf token.
@@ -99,15 +99,15 @@ class CSRFHandler
      */
     public function validateRequest($throw = false)
     {
-        if (!isset($this->token)) {
-            $this->loadToken();
-        }
+        $this->loadToken();
 
         if (!in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods)) {
             return true;
         }
 
-        if (!$this->validateToken($this->getSentToken())) {
+        $token = $this->getSentToken();
+
+        if ($token === false || !$this->validateToken($token)) {
             if ($throw) {
                 throw new InvalidCSRFTokenException("Request token was invalid");
             } else { // @codeCoverageIgnoreStart
@@ -178,37 +178,41 @@ class CSRFHandler
     }
 
     /**
-     * Returns the current actual csrf token string.
+     * Returns the current actual csrf token.
+     *
+     * This returns the actual 32 byte string that sent tokens are validated
+     * against. Note that the bytes are random and should not be used without
+     * proper escaping.
+     *
      * @return string The current actual token
      */
-    private function getTrueToken()
+    public function getTrueToken()
     {
-        if (!isset($this->token)) {
-            $this->loadToken();
-        }
-
+        $this->loadToken();
         return $this->token;
     }
 
     /**
-     * Loads the token from storage or generates a new on if doesn't yet exist.
+     * Loads the token from storage or generates a new one.
      */
     private function loadToken()
     {
-        $token = $this->getStoredToken();
+        if (!isset($this->token)) {
+            $token = $this->getStoredToken();
 
-        if ($token === false || strlen($token) !== $this->tokenLength) {
-            $token = $this->generateToken();
+            if ($token === false || strlen($token) !== $this->tokenLength) {
+                $token = $this->generateToken();
+            }
+
+            $this->token = $token;
         }
-
-        $this->token = $token;
     }
 
     /**
-     * Loads the token from cookie or session storage.
-     * @return string|boolean The stored token or false if none exists
+     * Loads the actual csrf token from persistent storage.
+     * @return string|false The stored token or false if none exists
      */
-    private function getStoredToken()
+    protected function getStoredToken()
     {
         $token = false;
 
@@ -226,28 +230,34 @@ class CSRFHandler
     }
 
     /**
-     * Generates a new token and stores it in the cookie ro session.
+     * Generates a new token and stores it in the cookie or session.
      * @return string The new generated token
      */
     private function generateToken()
     {
         $token = $this->getRandomBytes($this->tokenLength);
-        $encoded = base64_encode($token);
-
-        if ($this->useCookies) { // @codeCoverageIgnoreStart
-            setcookie($this->storageName, $encoded, 0, '/');
-        } else { // @codeCoverageIgnoreEnd
-            $_SESSION[$this->storageName] = $encoded;
-        }
-
+        $this->storeToken($token);
         return $token;
     }
 
     /**
-     * Gets the token sent in the request.
-     * @return string|boolean the token sent in the request or false if none
+     * Stores the actual csrf token in persistent storage.
+     * @param string $token The actual csrf token
      */
-    private function getSentToken()
+    protected function storeToken($token)
+    {
+        if ($this->useCookies) { // @codeCoverageIgnoreStart
+            setcookie($this->storageName, base64_encode($token), 0, '/');
+        } else { // @codeCoverageIgnoreEnd
+            $_SESSION[$this->storageName] = base64_encode($token);
+        }
+    }
+
+    /**
+     * Returns the token sent in the request.
+     * @return string|boolean The token sent in the request or false if none
+     */
+    protected function getSentToken()
     {
         if (!empty($_POST[$this->formFieldName])) {
             $token = $_POST[$this->formFieldName];
@@ -259,26 +269,32 @@ class CSRFHandler
     }
 
     /**
-     * Gets the token sent in a header field.
+     * Returns the token sent in a header field.
      * @return string|boolean The token sent in a header or false if none exists
      */
     private function getHeaderToken()
     {
         if (function_exists('apache_request_headers')) {
-            $headers = apache_request_headers();
-
-            if (isset($headers[$this->headerName])) {
-                return $headers[$this->headerName];
+            $token = $this->getHeader($this->headerName, apache_request_headers());
+            if ($token !== false) {
+                return $token;
             }
         }
 
-        $key = 'HTTP_' . str_replace('-', '_', strtoupper($this->headerName));
+        return $this->getHeader('HTTP_' . str_replace('-', '_', $this->headerName), $_SERVER);
+    }
 
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return false;
+    /**
+     * Returns the case insensitive header from the list of headers.
+     * @param string $name name of the header
+     * @param array $headers List of headers
+     * @return string|boolean Contents of the header or false if it does not exist
+     */
+    private function getHeader($name, $headers)
+    {
+        $headers = array_change_key_case($headers);
+        $name = strtolower($name);
+        return isset($headers[$name]) ? $headers[$name] : false;
     }
 
     /**
@@ -304,7 +320,8 @@ class CSRFHandler
      * @param string $b Second string to compare
      * @return boolean True if the strings are equal, false if not
      */
-    private function timedEquals($a, $b) {
+    private function timedEquals($a, $b)
+    {
         if (strlen($a) !== strlen($b)) {
             return false;
         }
@@ -324,7 +341,7 @@ class CSRFHandler
      * @return string Generated random bytes as a string
      * @throws \RuntimeException If the bytes could not be generated securely
      */
-    private function getRandomBytes($count)
+    protected function getRandomBytes($count)
     {
         $bytes = \openssl_random_pseudo_bytes($count, $strong);
 
@@ -335,8 +352,3 @@ class CSRFHandler
         return $bytes;
     }
 }
-
-/**
- * Thrown when the CSRF token is missing or is invalid.
- */
-class InvalidCSRFTokenException extends \Exception { }

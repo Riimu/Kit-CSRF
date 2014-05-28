@@ -99,7 +99,6 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
     {
         $handler = new CSRFHandler();
         $handler->setUseCookies(false);
-        $token = $handler->getToken();
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $handler->validateRequest(true);
     }
@@ -121,10 +120,8 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($handlerB->validateRequest());
         unset($_SERVER['HTTP_X_CSRF_TOKEN']);
 
-        try {
-            $handlerB->validateRequest(true);
-            $this->fail();
-        } catch (\Exception $ex) { }
+        $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
+        $handlerB->validateRequest(true);
     }
 
     /**
@@ -178,5 +175,12 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($handler->validateToken($token));
         $handler->regenerateToken();
         $this->assertFalse($handler->validateToken($token));
+    }
+
+    public function testInvalidTokenType()
+    {
+        $handler = new CSRFHandler();
+        $handler->setUseCookies(false);
+        $this->assertFalse($handler->validateToken(0));
     }
 }
