@@ -94,7 +94,7 @@ class CSRFHandler
      * after the session has been started but before headers have been sent.
      *
      * @param boolean $throw True to throw exception on error instead of dying
-     * @return boolean Always returns true
+     * @return true Always returns true
      * @throws InvalidCSRFTokenException If throwing is enabled and csrf token is invalid
      */
     public function validateRequest($throw = false)
@@ -109,7 +109,7 @@ class CSRFHandler
 
         if ($token === false || !$this->validateToken($token)) {
             if ($throw) {
-                throw new InvalidCSRFTokenException("Request token was invalid");
+                throw new InvalidCSRFTokenException('Request token was invalid');
             } else { // @codeCoverageIgnoreStart
                 header('HTTP/1.0 400 Bad Request');
                 die;
@@ -140,11 +140,7 @@ class CSRFHandler
             return false;
         }
 
-        if (!$this->timedEquals($this->cryptToken($token), $this->getTrueToken())) {
-            return false;
-        }
-
-        return true;
+        return $this->timedEquals($this->cryptToken($token), $this->getTrueToken());
     }
 
     /**
@@ -255,7 +251,7 @@ class CSRFHandler
 
     /**
      * Returns the token sent in the request.
-     * @return string|boolean The token sent in the request or false if none
+     * @return string|false The token sent in the request or false if none
      */
     protected function getSentToken()
     {
@@ -270,7 +266,7 @@ class CSRFHandler
 
     /**
      * Returns the token sent in a header field.
-     * @return string|boolean The token sent in a header or false if none exists
+     * @return string|false The token sent in a header or false if none exists
      */
     private function getHeaderToken()
     {
@@ -288,7 +284,7 @@ class CSRFHandler
      * Returns the case insensitive header from the list of headers.
      * @param string $name name of the header
      * @param array $headers List of headers
-     * @return string|boolean Contents of the header or false if it does not exist
+     * @return string|false Contents of the header or false if it does not exist
      */
     private function getHeader($name, $headers)
     {
@@ -306,7 +302,7 @@ class CSRFHandler
     private function cryptToken($token)
     {
         if (strlen($token) % 2 != 0 || strlen($token) < 2) {
-            throw new \RuntimeException("Invalid token length");
+            throw new \RuntimeException('Invalid token length');
         }
 
         list($key, $value) = str_split($token, strlen($token) / 2);
@@ -328,7 +324,7 @@ class CSRFHandler
 
         $result = "\x00";
 
-        for ($i = 0; $i < strlen($a); $i++) {
+        for ($i = 0, $length = strlen($a); $i < $length; $i++) {
             $result |= $a[$i] ^ $b[$i];
         }
 
@@ -346,7 +342,7 @@ class CSRFHandler
         $bytes = \openssl_random_pseudo_bytes($count, $strong);
 
         if (!$strong) {
-            throw new \RuntimeException("Byte generation was not strong");
+            throw new \RuntimeException('Byte generation was not strong');
         }
 
         return $bytes;

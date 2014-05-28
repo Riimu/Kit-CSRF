@@ -8,6 +8,10 @@ always encrypted to avoid BREACH attacks.
 
 API documentation for the classes can be generated using apigen.
 
+[![Build Status](https://travis-ci.org/Riimu/Kit-CSRF.svg?branch=master)](https://travis-ci.org/Riimu/Kit-CSRF)
+[![Coverage Status](https://coveralls.io/repos/Riimu/Kit-CSRF/badge.png?branch=master)](https://coveralls.io/r/Riimu/Kit-CSRF?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/Riimu/Kit-CSRF/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/Riimu/Kit-CSRF/?branch=master)
+
 ## Requirements ##
 
 For generating secure random tokens and encryptions keys, the following PHP
