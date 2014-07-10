@@ -1,7 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../src/InvalidCSRFTokenException.php';
-require_once __DIR__ . '/../src/CSRFHandler.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 function defineRequestHeadersFunction()
 {

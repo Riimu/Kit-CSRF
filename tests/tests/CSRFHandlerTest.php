@@ -27,28 +27,24 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testTokenRandomness()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $token = $handler->getToken();
         $this->assertNotEquals($token, $handler->getToken());
 
-        $handlerB = new CSRFHandler();
-        $handlerB->setUseCookies(false);
+        $handlerB = $this->getHandler();
         $this->assertNotEquals($token, $handlerB->getToken());
     }
 
     public function testTokenValidation()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $token = $handler->getToken();
         $this->assertTrue($handler->validateToken($token));
     }
 
     public function testBadTokens()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $this->assertFalse($handler->validateToken('a'));
 
         $invalid = base64_decode($handler->getToken());
@@ -58,23 +54,20 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testTokenLoading()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $token = $handler->getToken();
 
-        $handlerB = new CSRFHandler();
-        $handlerB->setUseCookies(false);
+        $handlerB = $this->getHandler();
         $this->assertTrue($handlerB->validateToken($token));
 
         $_COOKIE['csrf_token'] = $_SESSION['csrf_token'];
-        $handlerC = new CSRFHandler();
+        $handlerC = $this->getHandler(true);
         $this->assertTrue($handlerC->validateToken($token));
     }
 
     public function testSafeMethods()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->assertTrue($handler->validateRequest());
@@ -84,8 +77,7 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testSentPostToken()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $token = $handler->getToken();
         $_POST['csrf_token'] = $token;
         $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -97,16 +89,14 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidPostToken()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $handler->validateRequest(true);
     }
 
     public function testGetTokenFromHeaders()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $token = $handler->getToken();
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
@@ -115,8 +105,7 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
         \defineRequestHeadersFunction();
 
-        $handlerB = new CSRFHandler();
-        $handlerB->setUseCookies(false);
+        $handlerB = $this->getHandler();
         $this->assertTrue($handlerB->validateRequest());
         unset($_SERVER['HTTP_X_CSRF_TOKEN']);
 
@@ -124,39 +113,21 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $handlerB->validateRequest(true);
     }
 
-    /**
-     * @expectedException \RuntimeException
-     */
-    public function testTooShortTokenGeneration()
-    {
-        $handler = new CSRFHandler();
-        $ref = new \ReflectionClass($handler);
-        $length = $ref->getProperty('tokenLength');
-        $length->setAccessible(true);
-        $length->setValue($handler, 0);
-        $handler->getToken();
-    }
-
-    /**
-     * @expectedException \RuntimeException
-     */
     public function testBadTokenLengthChange()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
-        $handler->getToken();
+        $handler = $this->getHandler();
+        $original = $handler->getToken();
 
         $ref = new \ReflectionClass($handler);
         $length = $ref->getProperty('tokenLength');
         $length->setAccessible(true);
         $length->setValue($handler, 31);
-        $handler->getToken();
+        $this->assertNotEquals($original, $handler->getToken());
     }
 
     public function testComparisonLengthFailure()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $handler->getToken();
 
         $ref = new \ReflectionClass($handler);
@@ -168,8 +139,7 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testTokenRegeneration()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
 
         $token = $handler->getToken();
         $this->assertTrue($handler->validateToken($token));
@@ -179,8 +149,51 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
 
     public function testInvalidTokenType()
     {
-        $handler = new CSRFHandler();
-        $handler->setUseCookies(false);
+        $handler = $this->getHandler();
         $this->assertFalse($handler->validateToken(0));
+    }
+
+    public function testMockedGenerator()
+    {
+        $handler = $this->getHandler();
+
+        $mock = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
+        $mock->expects($this->once())->method('getBytes')->with(32)->will($this->returnValue(str_repeat(chr(0), 32)));
+
+        $handler->setGenerator($mock);
+        $this->assertSame(str_repeat(chr(0), 32), $handler->getTrueToken());
+    }
+
+    public function testSetSource()
+    {
+        $handler = $this->getHandler();
+        $_POST['csrf_token'] = $handler->getToken();
+        $handler->setSources([new Source\HeaderSource()]);
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+
+        $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
+        $handler->validateRequest(true);
+    }
+
+    public function testMissingCookieStorage()
+    {
+        $handler = new CSRFHandler();
+
+        $mock = $this->getMock('Riimu\Kit\CSRF\Storage\CookieStorage', ['storeToken']);
+        $mock->expects($this->once())->method('storeToken');
+
+        $handler->setStorage($mock);
+        $handler->getToken();
+    }
+
+    private function getHandler($useCookies = false)
+    {
+        $handler = new CSRFHandler();
+
+        if (!$useCookies) {
+            $handler->setStorage(new Storage\SessionStorage());
+        }
+
+        return $handler;
     }
 }

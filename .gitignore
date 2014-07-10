@@ -1,3 +1,5 @@
 .idea
 apidoc
-
+vendor
+coverage
+composer.lock

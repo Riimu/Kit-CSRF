@@ -15,10 +15,12 @@ generated using ApiGen.
 
 ## Requirements ##
 
-For generating secure random tokens and encryptions keys, the following PHP
-extension is required.
+To generate secure random tokens and encryption keys for the tokens in each
+request, the library depends on another library for the secure random byte
+generators. The library is included in the composer requirements. For more
+information about that library and its requirements, see below:
 
-  * [OpenSSL](http://www.php.net/manual/en/book.openssl.php)
+  * [Kit\SecureRandom](https://github.com/Riimu/Kit-SecureRandom)
 
 ## Installation ##
 
@@ -28,7 +30,7 @@ by including the following dependency in your `composer.json`:
 ```json
 {
     "require": {
-        "riimu/kit-csrf": "1.*"
+        "riimu/kit-csrf": "2.*"
     }
 }
 ```
@@ -84,14 +86,21 @@ request, the CSRF token can also provided using a `X-CSRF-Token` header.
 
 In order to avoid session dependency by default, the CSRF token is stored in
 cookie named 'csrf_token'. However, if you wish to store the token in sessions
-instead, you can set the `setUseCookies($enabled)` to false.
+instead, you should set the argument `$useCookies` in the constructor to false.
+For example:
+
+```php
+<?php
+$csrf = new \Riimu\Kit\CSRF\CSRFHandler(false);
+```
+
 
 If you want to implement custom triggers on when to validate the request or
 provide the CSRF token using some other method, you may also call
 `validateToken($token)` with the encrypted token to validate it. The method will
 return True if the token is valid, false if not.
 
-To prevent BREACH attacks, the tokens returned by `getToken()` are always
+To prevent BREACH attacks, the token returned by `getToken()` is always
 encrypted. Because of this, each call to that method will return a new string,
 since a new encryption key is always generated. They are all valid CSRF tokens
 until the token is regenerated, of course.

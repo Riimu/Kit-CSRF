@@ -1,5 +1,7 @@
 <?php
-require __DIR__ . '/../src/CSRFHandler.php';
+
+require __DIR__ . '/../vendor/autoload.php';
+
 $csrf = new \Riimu\Kit\CSRF\CSRFHandler();
 $csrf->validateRequest();
 
