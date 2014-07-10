@@ -38,13 +38,13 @@ class CSRFHandler
 
     /**
      * Persistent storage where to store the actual token.
-     * @var Storage\CookieStorage
+     * @var Storage\TokenStorage
      */
     private $storage;
 
     /**
      * Available sources where to look for the CSRF token.
-     * @var array
+     * @var Source\TokenSource[]
      */
     private $sources;
 
@@ -60,7 +60,6 @@ class CSRFHandler
      */
     public function __construct($useCookies = true)
     {
-        $this->token = null;
         $this->generator = new SecureRandom();
         $this->storage = $useCookies ? new Storage\CookieStorage() : new Storage\SessionStorage();
         $this->sources = [
@@ -205,8 +204,8 @@ class CSRFHandler
      */
     public function regenerateToken()
     {
-        $this->token = false;
-        $this->getTrueToken();
+        $this->token = $this->generator->getBytes($this->tokenLength);
+        $this->storage->storeToken($this->token);
 
         return $this;
     }
@@ -222,16 +221,14 @@ class CSRFHandler
      */
     public function getTrueToken()
     {
-        if (!isset($this->token)) {
-            $this->token = $this->storage->getStoredtoken();
+        $token = isset($this->token) ? $this->token : $this->storage->getStoredtoken();
+
+        if ($token === false || strlen($token) !== $this->tokenLength) {
+            $this->regenerateToken();
+            return $this->token;
         }
 
-        if ($this->token === false || strlen($this->token) !== $this->tokenLength) {
-            $this->token = $this->generator->getBytes($this->tokenLength);
-            $this->storage->storeToken($this->token);
-        }
-
-        return $this->token;
+        return $this->token = $token;
     }
 
     /**
@@ -240,6 +237,8 @@ class CSRFHandler
      */
     private function getRequestToken()
     {
+        $token = false;
+
         foreach ($this->sources as $source) {
             if (($token = $source->getRequestToken()) !== false) {
                 break;
