@@ -186,6 +186,18 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $handler->getToken();
     }
 
+    public function testConstantTimeComparisonMethod()
+    {
+        $handler = $this->getHandler();
+        $token = $handler->getToken();
+
+        $property = new \ReflectionProperty($handler, 'compare');
+        $property->setAccessible(true);
+        $property->setValue($handler, [$handler, 'compareStrings']);
+
+        $this->assertTrue($handler->validateToken($token));
+    }
+
     private function getHandler($useCookies = false)
     {
         $handler = new CSRFHandler();

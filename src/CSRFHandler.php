@@ -42,10 +42,7 @@ class CSRFHandler
      */
     private $storage;
 
-    /**
-     * Available sources where to look for the CSRF token.
-     * @var Source\TokenSource[]
-     */
+    /** @var Source\TokenSource[] Possible sources for submitted tokens */
     private $sources;
 
     /**
@@ -53,6 +50,9 @@ class CSRFHandler
      * @var string
      */
     private $token;
+
+    /** @var callable Callback used to compare strings in constant time */
+    private $compare;
 
     /**
      * Creates a new instance of CSRFHandler.
@@ -66,6 +66,9 @@ class CSRFHandler
             new Source\PostSource(),
             new Source\HeaderSource(),
         ];
+
+        $this->compare = version_compare(PHP_VERSION, '5.6', '>=')
+            ? 'hash_equals' : [$this, 'compareStrings'];
     }
 
     /**
@@ -175,7 +178,7 @@ class CSRFHandler
         }
 
         list($key, $encrypted) = str_split($token, $this->tokenLength);
-        return $this->constantTimeCompare($key ^ $encrypted, $this->getTrueToken());
+        return call_user_func($this->compare, $this->getTrueToken(), $key ^ $encrypted);
     }
 
     /**
@@ -250,16 +253,16 @@ class CSRFHandler
 
     /**
      * Compares two string in constant time.
-     * @param string $a First string to compare
-     * @param string $b Second string to compare
-     * @return boolean True if the strings are equal, false if not
+     * @param string $knownString String known to be correct by the system
+     * @param string $userString String submitted by the user for comparison
+     * @return bool True if the strings are equal, false if not
      */
-    private function constantTimeCompare($a, $b)
+    private function compareStrings($knownString, $userString)
     {
         $result = "\x00";
 
-        for ($i = strlen($a) - 1; $i >= 0; $i--) {
-            $result |= $a[$i] ^ $b[$i];
+        for ($i = 0, $length = strlen($knownString); $i < $length; $i++) {
+            $result |= $knownString[$i] ^ $userString[$i];
         }
 
         return $result === "\x00";
