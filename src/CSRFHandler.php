@@ -128,6 +128,15 @@ class CSRFHandler
     }
 
     /**
+     * Tells if CSRF token should be validated for the current request method.
+     * @return boolean True if the token should be validated, false if not
+     */
+    public function isValidatedMethod()
+    {
+        return in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods);
+    }
+
+    /**
      * Validates the csrf token in the http request.
      *
      * The intention of this method is to be called at the beginning of each
@@ -151,11 +160,11 @@ class CSRFHandler
         // Ensure that the actual token is generated and stored
         $this->getTrueToken();
 
-        if (!in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods)) {
-            return true;
+        if (!$this->isValidatedMethod()) {
+             return true;
         }
 
-        if (!$this->validateToken((string) $this->getRequestToken())) {
+        if (!$this->validateRequestToken()) {
             if ($throw) {
                 throw new InvalidCSRFTokenException('Invalid CSRF token');
             } else {
@@ -164,6 +173,16 @@ class CSRFHandler
         }
 
         return true;
+    }
+
+    /**
+     * Validates the token sent in the request.
+     * @return boolean True if the token sent in the request if valid, false if not
+     */
+    public function validateRequestToken()
+    {
+        $token = $this->getRequestToken();
+        return $token !== false && $this->validateToken($token);
     }
 
     /**
@@ -256,9 +275,9 @@ class CSRFHandler
 
     /**
      * Returns the token sent in the request.
-     * @return string|false The token sent in the request or false if none
+     * @return string|false The token sent in the request or false if there is none
      */
-    private function getRequestToken()
+    public function getRequestToken()
     {
         $token = false;
 
