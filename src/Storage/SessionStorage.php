@@ -32,10 +32,6 @@ class SessionStorage implements TokenStorage
 
     public function getStoredToken()
     {
-        if (!isset($_SESSION[$this->name])) {
-            return false;
-        }
-
-        return base64_decode($_SESSION[$this->name]);
+        return isset($_SESSION[$this->name]) ? base64_decode($_SESSION[$this->name]) : false;
     }
 }

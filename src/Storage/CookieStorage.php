@@ -67,10 +67,6 @@ class CookieStorage implements TokenStorage
 
     public function getStoredToken()
     {
-        if (!isset($_COOKIE[$this->name])) {
-            return false;
-        }
-
-        return base64_decode($_COOKIE[$this->name]);
+        return isset($_COOKIE[$this->name]) ? base64_decode($_COOKIE[$this->name]) : false;
     }
 }

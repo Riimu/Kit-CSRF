@@ -96,20 +96,9 @@ class CSRFHandler
      */
     public function setSources(array $sources)
     {
-        $this->sources = [];
-
-        foreach ($sources as $source) {
-            $this->addSource($source);
-        }
-    }
-
-    /**
-     * Adds additional token source.
-     * @param Source\TokenSource $source Token source to use.
-     */
-    private function addSource(Source\TokenSource $source)
-    {
-        $this->sources[] = $source;
+        $this->sources = array_map(function(Source\TokenSource $source) {
+            return $source;
+        }, $sources);
     }
 
     /**
@@ -249,10 +238,11 @@ class CSRFHandler
     public function getTrueToken()
     {
         if (!isset($this->token)) {
-            $this->token = $this->storage->getStoredToken();
+            $token = $this->storage->getStoredToken();
+            $this->token = is_string($token) ? $token : '';
         }
 
-        if (!is_string($this->token) || strlen($this->token) !== $this->tokenLength) {
+        if (strlen($this->token) !== $this->tokenLength) {
             $this->regenerateToken();
         }
 
