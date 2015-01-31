@@ -25,6 +25,15 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testKillingScript()
+    {
+        $mock = $this->getMock('Riimu\Kit\CSRF\CSRFHandler', ['killScript', 'getTrueToken']);
+        $mock->expects($this->once())->method('killScript');
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $mock->validateRequest();
+    }
+
     public function testTokenRandomness()
     {
         $handler = $this->getHandler();
@@ -196,6 +205,8 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $property->setValue($handler, [$handler, 'compareStrings']);
 
         $this->assertTrue($handler->validateToken($token));
+        $handler->regenerateToken();
+        $this->assertFalse($handler->validateToken($token));
     }
 
     private function getHandler($useCookies = false)

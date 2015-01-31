@@ -60,7 +60,6 @@ class CSRFHandler
      */
     public function __construct($useCookies = true)
     {
-        $this->generator = new SecureRandom();
         $this->storage = $useCookies ? new Storage\CookieStorage() : new Storage\SessionStorage();
         $this->sources = [
             new Source\PostSource(),
@@ -72,12 +71,25 @@ class CSRFHandler
     }
 
     /**
-     * Sets the random generator for secure bytes.
-     * @param SecureRandom $generator Secure random generator for tokens
+     * Sets the random generator for generating secure random bytes.
+     * @param SecureRandom $generator Secure random generator
      */
     public function setGenerator(SecureRandom $generator)
     {
         $this->generator = $generator;
+    }
+
+    /**
+     * Returns the current secure random generator
+     * @return SecureRandom Current secure random generator
+     */
+    public function getGenerator()
+    {
+        if (!isset($this->generator)) {
+            $this->generator = new SecureRandom();
+        }
+
+        return $this->generator;
     }
 
     /**
@@ -136,24 +148,32 @@ class CSRFHandler
      */
     public function validateRequest($throw = false)
     {
+        // Ensure that the actual token is generated and stored
         $this->getTrueToken();
 
         if (!in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods)) {
             return true;
         }
 
-        $token = $this->getRequestToken();
-
-        if ($token === false || !$this->validateToken($token)) {
+        if (!$this->validateToken((string) $this->getRequestToken())) {
             if ($throw) {
-                throw new InvalidCSRFTokenException('Request token was invalid');
-            } else { // @codeCoverageIgnoreStart
-                header('HTTP/1.0 400 Bad Request');
-                die;
-            } // @codeCoverageIgnoreEnd
+                throw new InvalidCSRFTokenException('Invalid CSRF token');
+            } else {
+                $this->killScript();
+            }
         }
 
         return true;
+    }
+
+    /**
+     * Kills the script execution and sends the appropriate header.
+     * @codeCoverageIgnore
+     */
+    protected function killScript()
+    {
+        header('HTTP/1.0 400 Bad Request');
+        exit();
     }
 
     /**
@@ -192,7 +212,7 @@ class CSRFHandler
      */
     public function getToken()
     {
-        $key = $this->generator->getBytes($this->tokenLength);
+        $key = $this->getGenerator()->getBytes($this->tokenLength);
         return base64_encode($key . ($key ^ $this->getTrueToken()));
     }
 
@@ -207,7 +227,7 @@ class CSRFHandler
      */
     public function regenerateToken()
     {
-        $this->token = $this->generator->getBytes($this->tokenLength);
+        $this->token = $this->getGenerator()->getBytes($this->tokenLength);
         $this->storage->storeToken($this->token);
 
         return $this;
@@ -255,7 +275,7 @@ class CSRFHandler
      * Compares two string in constant time.
      * @param string $knownString String known to be correct by the system
      * @param string $userString String submitted by the user for comparison
-     * @return bool True if the strings are equal, false if not
+     * @return boolean True if the strings are equal, false if not
      */
     private function compareStrings($knownString, $userString)
     {
