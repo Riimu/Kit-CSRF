@@ -13,6 +13,7 @@ interface TokenStorage
     /**
      * Stores the actual csrf token in persistent storage.
      * @param string $token The actual csrf token
+     * @return void
      */
     public function storeToken($token);
 

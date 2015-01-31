@@ -18,37 +18,22 @@ use Riimu\Kit\SecureRandom\SecureRandom;
  */
 class CSRFHandler
 {
-    /**
-     * List of request methods validated by validateRequest() method.
-     * @var string[]
-     */
+    /** @var string[] List of request methods that need to be validated for CSRF token */
     protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
 
-    /**
-     * Number of bytes used in CSRF tokens.
-     * @var integer
-     */
+    /** @var integer Number of bytes used in CSRF tokens */
     protected $tokenLength = 32;
 
-    /**
-     * Secure random generator for generating bytes.
-     * @var \Riimu\Kit\SecureRandom\SecureRandom
-     */
+    /** @var SecureRandom Secure random generator for generating secure random bytes */
     private $generator;
 
-    /**
-     * Persistent storage where to store the actual token.
-     * @var Storage\TokenStorage
-     */
+    /** @var Storage\TokenStorage Persistent storage used to store the true token */
     private $storage;
 
     /** @var Source\TokenSource[] Possible sources for submitted tokens */
     private $sources;
 
-    /**
-     * Current actual csrf token.
-     * @var string
-     */
+    /** @var string The current true CSRF token */
     private $token;
 
     /** @var callable Callback used to compare strings in constant time */
@@ -152,7 +137,7 @@ class CSRFHandler
      * after the session has been started but before headers have been sent.
      *
      * @param boolean $throw True to throw exception on error instead of dying
-     * @return true Always returns true
+     * @return boolean This method always returns true
      * @throws InvalidCSRFTokenException If throwing is enabled and csrf token is invalid
      */
     public function validateRequest($throw = false)
@@ -176,16 +161,6 @@ class CSRFHandler
     }
 
     /**
-     * Validates the token sent in the request.
-     * @return boolean True if the token sent in the request if valid, false if not
-     */
-    public function validateRequestToken()
-    {
-        $token = $this->getRequestToken();
-        return $token !== false && $this->validateToken($token);
-    }
-
-    /**
      * Kills the script execution and sends the appropriate header.
      * @codeCoverageIgnore
      */
@@ -193,6 +168,16 @@ class CSRFHandler
     {
         header('HTTP/1.0 400 Bad Request');
         exit();
+    }
+
+    /**
+     * Validates the token sent in the request.
+     * @return boolean True if the token sent in the request if valid, false if not
+     */
+    public function validateRequestToken()
+    {
+        $token = $this->getRequestToken();
+        return is_string($token) && $this->validateToken($token);
     }
 
     /**
@@ -263,14 +248,15 @@ class CSRFHandler
      */
     public function getTrueToken()
     {
-        $token = isset($this->token) ? $this->token : $this->storage->getStoredtoken();
-
-        if ($token === false || strlen($token) !== $this->tokenLength) {
-            $this->regenerateToken();
-            return $this->token;
+        if (!isset($this->token)) {
+            $this->token = $this->storage->getStoredToken();
         }
 
-        return $this->token = $token;
+        if (!is_string($this->token) || strlen($this->token) !== $this->tokenLength) {
+            $this->regenerateToken();
+        }
+
+        return $this->token;
     }
 
     /**
