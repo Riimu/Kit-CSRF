@@ -1,5 +1,5 @@
 .idea
-apidoc
-vendor
+api
 coverage
+vendor
 composer.lock

@@ -1,7 +1,11 @@
-source: src
-destination: apidoc
-charset: UTF-8
-title: kit-csrf
-report: apidoc/report.xml
-wipeout: Yes
-progressbar: No
+source:
+	- src
+
+destination: api
+charset:
+	- UTF-8
+
+main: Riimu\Kit\CSRF
+title: CSRF
+php: false
+tree: true

@@ -18,10 +18,10 @@ use Riimu\Kit\SecureRandom\SecureRandom;
  */
 class CSRFHandler
 {
-    /** @var string[] List of request methods that need to be validated for CSRF token */
+    /** @var string[] List of request methods that need to be validated for the CSRF token */
     protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
 
-    /** @var integer Number of bytes used in the CSRF tokens */
+    /** @var integer Number of bytes used in the CSRF token */
     protected $tokenLength = 32;
 
     /** @var SecureRandom Secure random generator for generating secure random bytes */

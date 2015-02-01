@@ -10,15 +10,12 @@ namespace Riimu\Kit\CSRF\Source;
  */
 class PostSource implements TokenSource
 {
-    /**
-     * Name of the input field used to send the csrf token in forms.
-     * @var string
-     */
+    /** @var string Name of the input field for the CSRF token */
     private $fieldName;
 
     /**
      * Creates a new instance of PostSource.
-     * @param string $fieldName Name of the token field in $_POST
+     * @param string $fieldName Name of the input field in $_POST
      */
     public function __construct($fieldName = 'csrf_token')
     {

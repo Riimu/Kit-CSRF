@@ -10,10 +10,7 @@ namespace Riimu\Kit\CSRF\Storage;
  */
 class SessionStorage implements TokenStorage
 {
-    /**
-     * Name of the session variables that stores the actual token.
-     * @var string
-     */
+    /** @var string Name of the session variable used to store the token */
     private $name;
 
     /**

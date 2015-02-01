@@ -10,15 +10,12 @@ namespace Riimu\Kit\CSRF\Source;
  */
 class HeaderSource implements TokenSource
 {
-    /**
-     * Name of the custom header used to send the csrf token.
-     * @var string
-     */
+    /** @var string Name of the custom header used to send the csrf token */
     private $headerName;
 
     /**
-     * Creates new instance of HeaderSource.
-     * @param string $headerName Case insensitive name of the token header
+     * Creates a new instance of HeaderSource.
+     * @param string $headerName Case insensitive name of the header
      */
     public function __construct($headerName = 'X-CSRF-Token')
     {
@@ -41,7 +38,7 @@ class HeaderSource implements TokenSource
     /**
      * Returns the case insensitive header from the list of headers.
      * @param string $name name of the header
-     * @param array $headers List of headers
+     * @param string[] $headers List of headers
      * @return string|false Contents of the header or false if it does not exist
      */
     private function getHeader($name, $headers)

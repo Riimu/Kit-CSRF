@@ -10,34 +10,22 @@ namespace Riimu\Kit\CSRF\Storage;
  */
 class CookieStorage implements TokenStorage
 {
-    /**
-     * Name of the cookie used to store the actual token.
-     * @var string
-     */
+    /** @var string Name of the cookie used to store the actual token */
     private $name;
 
-    /**
-     * Lifetime for token cookie in seconds.
-     * @var integer
-     */
+    /** @var integer Lifetime for token cookie in seconds */
     private $time;
 
-    /**
-     * Path for the token cookie.
-     * @var string
-     */
+    /** @var string Path for the token cookie */
     private $path;
 
-    /**
-     * Domain for the token cookie or null for none.
-     * @var null|string
-     */
+    /** @var null|string Domain for the token cookie or null for none */
     private $domain;
 
     /**
      * Creates a new instance of CookieStorage.
      * @param string $name Name of the cookie used to store the token
-     * @param integer $time Lifetime of the token cookie seconds
+     * @param integer $time Lifetime of the token cookie in seconds
      * @param string $path Path for the token cookie
      * @param string|null $domain Domain for the token cookie or null for none
      */
@@ -50,8 +38,8 @@ class CookieStorage implements TokenStorage
     }
 
     /**
-     * Stores the actual csrf token in persistent storage.
-     * @param string $token The actual csrf token
+     * Stores the actual CSRF token in persistent storage.
+     * @param string $token The actual CSRF token
      * @codeCoverageIgnore
      */
     public function storeToken($token)
