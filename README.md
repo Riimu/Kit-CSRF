@@ -176,6 +176,13 @@ this can be leaked using various different attacks. Thus, GET requests should
 never affect the state. For example, allowing users to be deleted using a simple
 GET request would make your website vulnerable to CSRF attacks.
 
+Finally, remember that CSRF tokens only protect you from external requests. They
+offer no protection against [Cross-site Scripting](https://www.owasp.org/index.php/Cross-site_Scripting_%28XSS%29)
+attacks. If the attacker is capable of running javascript on your website, the
+CSRF tokens offer no additional protection. Using a XSS attack, the attacker is
+always capable of finding out the CSRF token. The security of your website only
+as strong as the weakest link.
+
 ### Manual Usage ###
 
 If you wish to have more control over the token validation, this library
