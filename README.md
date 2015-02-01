@@ -2,7 +2,7 @@
 
 *CSRF* is a PHP library for preventing [Cross-Site Request Forgery]
 (https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29) attacks.
-A CSRF attack takes advantage of authenticated users by sending them to
+A CSRF attack takes advantage of authenticated users by sending them to a
 malicious website that sends specially crafted requests to the targeted website
 in order to modify content on that website. The attack uses the authenticated
 user's browser to send the request to bypass any authentication. This library
@@ -11,14 +11,14 @@ request. These tokens are not known by the attacker, which prevents them from
 sending malicious requests.
 
 This library can store the CSRF tokens using cookies or sessions. In order to
-facilitate different kinds of websites and applications, it's also possible to
-submit the secret token in a hidden form field or using a HTTP header.
+facilitate different kinds of websites and applications, the library allows
+submission of the secret token in a hidden form field or using a HTTP header.
 
 In order to provide additional security against different forms of attacks
 against the CSRF tokens, this library uses constant time string comparisons to
 prevent timing attacks and encrypts each token with a random string to prevent
-BREACH attacks against. On top of that, each CSRF token and encryption key is
-generated using a secure random byte source.
+BREACH attacks. On top of that, each CSRF token and encryption key is generated
+using a secure random byte source.
 
 The API documentation, which can be generated using Apigen, can be read online
 at: http://kit.riimu.net/api/csrf/
@@ -104,12 +104,12 @@ $token = $csrf->getToken();
 <?php
 
 if (!empty($_POST['my_name'])) {
-    echo "  <p>Hello <strong>$_POST[my_name]!</strong></p>" . PHP_EOL;
+    printf("  <p>Hello <strong>%s!</strong></p>" . PHP_EOL, htmlspecialchars($_POST['my_name']));
 }
 
 ?>
-  <form method="POST" action="<?=$_SERVER['PHP_SELF']?>"><div>
-   <input type="hidden" name="csrf_token" value="<?=$token?>" />
+  <form method="POST" action="<?=htmlspecialchars($_SERVER['PHP_SELF'])?>"><div>
+   <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($token)?>" />
    What is your name?
    <input type="text" name="my_name" />
    <input type="submit" />
@@ -218,7 +218,7 @@ token.
 In order to prevent BREACH attacks, each token is encrypted using a simple XOR
 encryption with another random 32 byte string which has also been generated
 using the SecureRandom library. The base64 encoded string actually consists of
-the encryption key and the encrypted CSRF token. Thus the length of the 
+the encryption key and the encrypted CSRF token. Thus, the length of the 
 decoded token string is 64 bytes.
 
 Note that a new encryption key is generated every time `getToken()` is called.
