@@ -1,6 +1,6 @@
 # Changelog #
 
-## v2.1.0 (?) ##
+## v2.1.0 (2015-02-01) ##
 
   * Improvements in code quality and documentation
   * The library now prefers hash_equals for constant time string comparison on
