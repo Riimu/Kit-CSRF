@@ -8,7 +8,7 @@ namespace Riimu\Kit\CSRF;
  * @copyright Copyright (c) 2014, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class InvalidCSRFTokenException extends \Exception
+class InvalidCSRFTokenException extends \UnexpectedValueException
 {
 
 }

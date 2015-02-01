@@ -1,4 +1,4 @@
-# Secure CSRF Prevention #
+# Secure CSRF validator #
 
 This library provides a simple and secure way to prevent Cross-Site Request
 Forgery by using CSRF tokens that are passed via hidden fields in forms and also

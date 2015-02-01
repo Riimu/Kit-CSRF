@@ -5,12 +5,12 @@ namespace Riimu\Kit\CSRF;
 use Riimu\Kit\SecureRandom\SecureRandom;
 
 /**
- * CSRF token validator and generator.
+ * Secure CSRF token validator and generator.
  *
  * CSRFHandler provides a simple way to generate and validate CSRF tokens.
- * Precautions have been taken to avoid timing and BREACH attacks. For secure
- * random bytes, the library uses Kit\SecureRandom library to handle
- * generating tokens and random encryption keys for each request.
+ * Precautions have been taken to avoid timing and BREACH attacks. The tokens
+ * are generated using the SecureRandom library in order to generate secure
+ * random byte sequences.
  *
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2014, Riikka Kalliomäki
@@ -21,19 +21,19 @@ class CSRFHandler
     /** @var string[] List of request methods that need to be validated for CSRF token */
     protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
 
-    /** @var integer Number of bytes used in CSRF tokens */
+    /** @var integer Number of bytes used in the CSRF tokens */
     protected $tokenLength = 32;
 
     /** @var SecureRandom Secure random generator for generating secure random bytes */
     private $generator;
 
-    /** @var Storage\TokenStorage Persistent storage used to store the true token */
+    /** @var Storage\TokenStorage Persistent storage used to store the actual token */
     private $storage;
 
     /** @var Source\TokenSource[] Possible sources for submitted tokens */
     private $sources;
 
-    /** @var string The current true CSRF token */
+    /** @var string The current actual CSRF token */
     private $token;
 
     /** @var callable Callback used to compare strings in constant time */
@@ -41,7 +41,14 @@ class CSRFHandler
 
     /**
      * Creates a new instance of CSRFHandler.
-     * @param boolean $useCookies True to store the token in cookies, false for session
+     *
+     * When creating a new instance, it will be initialized with either cookie
+     * storage or session storage depending on whether you pass true or false
+     * as the constructor parameter (defaults to cookie). The actual token won't
+     * be loaded until the token is validated, though. By default, the handler
+     * will also use post and header data to look for submitted tokens.
+     *
+     * @param boolean $useCookies True for cookie storage, false for session storage
      */
     public function __construct($useCookies = true)
     {
@@ -65,7 +72,7 @@ class CSRFHandler
     }
 
     /**
-     * Returns the current secure random generator
+     * Returns the current secure random generator.
      * @return SecureRandom Current secure random generator
      */
     public function getGenerator()
@@ -78,8 +85,13 @@ class CSRFHandler
     }
 
     /**
-     * Sets the persistent storage for tokens.
-     * @param Storage\TokenStorage $storage Persistent storage handler for tokens
+     * Sets the persistent storage for the CSRF token.
+     *
+     * The token storage should be set before you create new tokens or attempt
+     * to validate tokens, because the storage is only used the first time the
+     * token is needed.
+     *
+     * @param Storage\TokenStorage $storage Persistent storage handler
      */
     public function setStorage(Storage\TokenStorage $storage)
     {
@@ -87,7 +99,7 @@ class CSRFHandler
     }
 
     /**
-     * Sets the possible the token sources.
+     * Sets the possible sources for submitted token.
      *
      * Multiple sources can be added using an array. The handler will look for
      * the token from the sources in the order they appear in the array.
@@ -102,39 +114,43 @@ class CSRFHandler
     }
 
     /**
-     * Tells if CSRF token should be validated for the current request method.
+     * Tells if the request method indicates that the CSRF token should be validated.
      * @return boolean True if the token should be validated, false if not
      */
-    public function isValidatedMethod()
+    public function isValidatedRequest()
     {
         return in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods);
     }
 
     /**
-     * Validates the csrf token in the http request.
+     * Validates the csrf token in the HTTP request.
      *
-     * The intention of this method is to be called at the beginning of each
-     * request. There is no need to check for the request type, since the
-     * token validation will be skipped for all but POST, PUT and DELETE
-     * requests.
+     * This method should be called in the beginning of the request. By default,
+     * POST, PUT and DELETE requests will be validated for a valid CSRF token.
+     * If the request does not provide a valid CSRF token, this method will
+     * kill the script and send a HTTP 400 (bad request) response to the
+     * browser.
      *
-     * If the token validation fails, the method will send a HTTP 400 response
-     * and kill the script. You can alternatively set the throw argument to
-     * true, which will cause the method to send an exception instead.
+     * This method also accepts a single parameter than can be either true or
+     * false. If the parameter is set to true, this method will throw an
+     * InvalidCSRFTokenException instead of killing the script if no valid CSRF
+     * token was provided in the request.
      *
-     * For loading and storing the csrf token, this method should be called
-     * after the session has been started but before headers have been sent.
+     * This method will always trigger the token storage. If you are using the
+     * cookie storage, this method must be called before the headers have been
+     * sent. If you are using the session storage instead, you must start the
+     * session before calling this method.
      *
-     * @param boolean $throw True to throw exception on error instead of dying
+     * @param boolean $throw True to throw an exception on invalid token, false to kill the script
      * @return boolean This method always returns true
-     * @throws InvalidCSRFTokenException If throwing is enabled and csrf token is invalid
+     * @throws InvalidCSRFTokenException If throwing is enabled and the csrf token is invalid
      */
     public function validateRequest($throw = false)
     {
         // Ensure that the actual token is generated and stored
         $this->getTrueToken();
 
-        if (!$this->isValidatedMethod()) {
+        if (!$this->isValidatedRequest()) {
              return true;
         }
 
@@ -161,7 +177,7 @@ class CSRFHandler
 
     /**
      * Validates the token sent in the request.
-     * @return boolean True if the token sent in the request if valid, false if not
+     * @return boolean True if the token sent in the request is valid, false if not
      */
     public function validateRequestToken()
     {
@@ -172,8 +188,9 @@ class CSRFHandler
     /**
      * Validates the csrf token.
      *
-     * The token must be provided as a base64 encoded string, which is provided
-     * by the getToken() method.
+     * The token must be provided as a base64 encoded string which also includes
+     * the token encryption key. In other words, you should pass this method the
+     * exact same string that has been returned by the `getToken()` method.
      *
      * @param string $token The base64 encoded token provided by getToken()
      * @return boolean True if the token is valid, false if it is not
@@ -195,13 +212,14 @@ class CSRFHandler
     }
 
     /**
-     * Generates a new secure base64 encoded csrf token for forms.
+     * Generates a new secure base64 encoded csrf token.
      *
-     * Every time this method called, a new string is returned. The actual token
-     * does not change, but a new encryption key for the token is generated on
-     * each call.
+     * This method returns a new string every time it is called, because it
+     * always generates a new encryption key for the token. Of course, each of
+     * these tokens is a valid CSRF token, unless the `regenerateToken()` method
+     * is called.
      *
-     * @return string Base64 encoded and encrypted csrf token
+     * @return string Base64 encoded CSRF token
      */
     public function getToken()
     {
@@ -210,11 +228,11 @@ class CSRFHandler
     }
 
     /**
-     * Regenerates the actual csrf token.
+     * Regenerates the actual CSRF token.
      *
-     * After this method is called, any token generated previously by getToken()
-     * will no longer validate. It is highly recommended to regenerate the
-     * csrf token after user authentication.
+     * After this method has been called, any token that has been previously
+     * generated by `getToken()` is no longer considered valid. It is highly
+     * recommended to regenerate the CSRF token after any user authentication.
      *
      * @return CSRFHandler Returns self for call chaining
      */
@@ -227,13 +245,12 @@ class CSRFHandler
     }
 
     /**
-     * Returns the current actual csrf token.
+     * Returns the current actual CSRF token.
      *
-     * This returns the actual 32 byte string that sent tokens are validated
-     * against. Note that the bytes are random and should not be used without
-     * proper escaping.
+     * This returns the current actual 32 byte random string that is used to
+     * validate the CSRF tokens submitted in requests.
      *
-     * @return string The current actual token
+     * @return string The current actual CSRF token
      */
     public function getTrueToken()
     {

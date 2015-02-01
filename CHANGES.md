@@ -1,9 +1,24 @@
 # Changelog #
 
+## v2.1.0 (?) ##
+
+  * Improvements in code quality and documentation
+  * The library now prefers hash_equals for constant time string comparison on
+    PHP version 5.6 and later.
+  * Added CSRFHandler::isValidatedRequest() to tell if the CSRF token should
+    be validated according to current request method.
+  * Added CSRFHandler::validateRequestToken() to validate the token sent in the
+    request.
+  * Changed CSRFHandler::getRequestToken() to public from protected
+  * CSRFHandler now calls protected method killScript() internally when killing
+    the script via validateRequest().
+  * The SecureRandom library is now only loaded when needed
+  * InvalidCSRFTokenException now extends UnexpectedValueException
+
 ## v2.0.0 (2014-07-10) ##
 
-  * The library now depends on Kit\SecureRandom for random bytes, instead of
-    just using openssl_random_pseudo_bytes.
+  * The library now depends on riimu/kit-securerandom for random bytes instead
+    of just using openssl_random_pseudo_bytes.
   * Token storage and source methods are now much more modular and separated
     into different interfaces/classes
   * CSRFHandler::setUseCookies() no longer exists. Use the argument in the
