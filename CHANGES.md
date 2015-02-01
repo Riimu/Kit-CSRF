@@ -14,6 +14,8 @@
     the script via validateRequest().
   * The SecureRandom library is now only loaded when needed
   * InvalidCSRFTokenException now extends UnexpectedValueException
+  * CSRFHandler::regenerateToken() now prevents the token from being the same
+    one as previously (should the astronomically unlikely event occur).
 
 ## v2.0.0 (2014-07-10) ##
 

@@ -238,7 +238,11 @@ class CSRFHandler
      */
     public function regenerateToken()
     {
-        $this->token = $this->getGenerator()->getBytes($this->tokenLength);
+        do {
+            $token = $this->getGenerator()->getBytes($this->tokenLength);
+        } while ($token === $this->token);
+
+        $this->token = $token;
         $this->storage->storeToken($this->token);
 
         return $this;
