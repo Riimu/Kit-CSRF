@@ -104,11 +104,11 @@ $token = $csrf->getToken();
 <?php
 
 if (!empty($_POST['my_name'])) {
-    printf("  <p>Hello <strong>%s!</strong></p>" . PHP_EOL, htmlspecialchars($_POST['my_name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    printf("  <p>Hello <strong>%s</strong>!</p>" . PHP_EOL, htmlspecialchars($_POST['my_name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 }
 
 ?>
-  <form method="POST" action="<?=htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES | ENT_HTML5, 'UTF-8')?>"><div>
+  <form method="post"><div>
    <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($token, ENT_QUOTES | ENT_HTML5, 'UTF-8')?>" />
    What is your name?
    <input type="text" name="my_name" />
