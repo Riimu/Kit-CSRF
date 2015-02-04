@@ -25,6 +25,13 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testExpectedTokenLength()
+    {
+        $handler = new CSRFHandler(false);
+        $this->assertSame(32, strlen($handler->getTrueToken()));
+        $this->assertSame(64, strlen(base64_decode($handler->getToken())));
+    }
+
     public function testKillingScript()
     {
         $mock = $this->getMock('Riimu\Kit\CSRF\CSRFHandler', ['killScript', 'getTrueToken']);

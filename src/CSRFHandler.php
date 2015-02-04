@@ -208,7 +208,23 @@ class CSRFHandler
         }
 
         list($key, $encrypted) = str_split($token, $this->tokenLength);
-        return call_user_func($this->compare, $this->getTrueToken(), $key ^ $encrypted);
+
+        return call_user_func(
+            $this->compare,
+            $this->encryptToken($this->getTrueToken(), $key),
+            $encrypted
+        );
+    }
+
+    /**
+     * Encrypts the token using a one way hashing algorithm.
+     * @param string $token The token to encrypt
+     * @param string $key The encryption key
+     * @return string The encrypted token
+     */
+    private function encryptToken($token, $key)
+    {
+        return hash_hmac('sha256', $token, $key, true);
     }
 
     /**
@@ -224,7 +240,7 @@ class CSRFHandler
     public function getToken()
     {
         $key = $this->getGenerator()->getBytes($this->tokenLength);
-        return base64_encode($key . ($key ^ $this->getTrueToken()));
+        return base64_encode($key . $this->encryptToken($this->getTrueToken(), $key));
     }
 
     /**
