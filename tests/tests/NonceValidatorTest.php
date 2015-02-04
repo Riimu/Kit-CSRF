@@ -47,4 +47,29 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($tokenA, $tokenB);
         $this->assertTrue($nonce->validateToken($tokenB));
     }
+
+    public function testAllowSameTokenAfterRegeneration()
+    {
+        $nonce = new NonceValidator();
+        $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
+
+        $random->expects($this->exactly(5))->method('getBytes')->will($this->onConsecutiveCalls(
+            str_repeat('A', CSRFHandler::TOKEN_LENGTH),
+            str_repeat('A', CSRFHandler::TOKEN_LENGTH),
+            str_repeat('B', CSRFHandler::TOKEN_LENGTH),
+            str_repeat('A', CSRFHandler::TOKEN_LENGTH),
+            str_repeat('A', CSRFHandler::TOKEN_LENGTH)
+        ));
+
+        $nonce->setGenerator($random);
+
+        $tokenA = $nonce->getToken();
+        $this->assertTrue($nonce->validateToken($tokenA));
+        $nonce->regenerateToken();
+        $nonce->regenerateToken();
+        $tokenB = $nonce->getToken();
+
+        $this->assertSame($tokenA, $tokenB);
+        $this->assertTrue($nonce->validateToken($tokenB));
+    }
 }

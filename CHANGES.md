@@ -1,5 +1,14 @@
 # Changelog #
 
+## v2.2.0 (2015-02-04) ##
+
+  * Token length is now stored in a constant CSRFHandler::TOKEN_LENGTH instead
+    of a protected member, as it should have been from the start.
+  * Use HMAC-SHA256 for generating the encrypted token instead of XOR cipher.
+  * CookieStorage now allows secure and httpOnly parameters in the constructor,
+    which default to false and true.
+  * Added NonceValidator class for using nonce tokens.
+
 ## v2.1.0 (2015-02-01) ##
 
   * Improvements in code quality and documentation
