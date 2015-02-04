@@ -18,11 +18,11 @@ use Riimu\Kit\SecureRandom\SecureRandom;
  */
 class CSRFHandler
 {
+    /** @var integer Number of bytes used in the CSRF token */
+    const TOKEN_LENGTH = 32;
+
     /** @var string[] List of request methods that need to be validated for the CSRF token */
     protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
-
-    /** @var integer Number of bytes used in the CSRF token */
-    protected $tokenLength = 32;
 
     /** @var SecureRandom Secure random generator for generating secure random bytes */
     private $generator;
@@ -203,11 +203,11 @@ class CSRFHandler
 
         $token = base64_decode($token);
 
-        if (strlen($token) !== $this->tokenLength * 2) {
+        if (strlen($token) !== self::TOKEN_LENGTH * 2) {
             return false;
         }
 
-        list($key, $encrypted) = str_split($token, $this->tokenLength);
+        list($key, $encrypted) = str_split($token, self::TOKEN_LENGTH);
 
         return call_user_func(
             $this->compare,
@@ -217,10 +217,10 @@ class CSRFHandler
     }
 
     /**
-     * Encrypts the token using a one way hashing algorithm.
-     * @param string $token The token to encrypt
-     * @param string $key The encryption key
-     * @return string The encrypted token
+     * Generates an encrypted token using a one way hashing algorithm.
+     * @param string $token The actual token
+     * @param string $key The randomly generated key
+     * @return string An encrypted token
      */
     private function encryptToken($token, $key)
     {
@@ -239,7 +239,7 @@ class CSRFHandler
      */
     public function getToken()
     {
-        $key = $this->getGenerator()->getBytes($this->tokenLength);
+        $key = $this->getGenerator()->getBytes(self::TOKEN_LENGTH);
         return base64_encode($key . $this->encryptToken($this->getTrueToken(), $key));
     }
 
@@ -255,7 +255,7 @@ class CSRFHandler
     public function regenerateToken()
     {
         do {
-            $token = $this->getGenerator()->getBytes($this->tokenLength);
+            $token = $this->getGenerator()->getBytes(self::TOKEN_LENGTH);
         } while ($token === $this->token);
 
         $this->token = $token;
@@ -279,7 +279,7 @@ class CSRFHandler
             $this->token = is_string($token) ? $token : '';
         }
 
-        if (strlen($this->token) !== $this->tokenLength) {
+        if (strlen($this->token) !== self::TOKEN_LENGTH) {
             $this->regenerateToken();
         }
 

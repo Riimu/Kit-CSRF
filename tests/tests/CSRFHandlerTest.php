@@ -55,6 +55,8 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
     {
         $handler = $this->getHandler();
         $token = $handler->getToken();
+
+        $this->assertTrue($handler->validateToken($token));
         $this->assertTrue($handler->validateToken($token));
     }
 
@@ -129,27 +131,9 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $handlerB->validateRequest(true);
     }
 
-    public function testBadTokenLengthChange()
-    {
-        $handler = $this->getHandler();
-        $original = $handler->getToken();
-
-        $ref = new \ReflectionClass($handler);
-        $length = $ref->getProperty('tokenLength');
-        $length->setAccessible(true);
-        $length->setValue($handler, 31);
-        $this->assertNotEquals($original, $handler->getToken());
-    }
-
     public function testComparisonLengthFailure()
     {
         $handler = $this->getHandler();
-        $handler->getToken();
-
-        $ref = new \ReflectionClass($handler);
-        $length = $ref->getProperty('tokenLength');
-        $length->setAccessible(true);
-        $length->setValue($handler, 30);
         $this->assertFalse($handler->validateToken(base64_encode(str_repeat('0', 60))));
     }
 

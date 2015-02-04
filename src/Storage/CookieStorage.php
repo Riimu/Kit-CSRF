@@ -10,17 +10,8 @@ namespace Riimu\Kit\CSRF\Storage;
  */
 class CookieStorage implements TokenStorage
 {
-    /** @var string Name of the cookie used to store the actual token */
-    private $name;
-
-    /** @var integer Lifetime for token cookie in seconds */
-    private $time;
-
-    /** @var string Path for the token cookie */
-    private $path;
-
-    /** @var null|string Domain for the token cookie or null for none */
-    private $domain;
+    /** @var array List of cookie parameters */
+    private $cookieParams;
 
     /**
      * Creates a new instance of CookieStorage.
@@ -28,13 +19,26 @@ class CookieStorage implements TokenStorage
      * @param integer $time Lifetime of the token cookie in seconds
      * @param string $path Path for the token cookie
      * @param string|null $domain Domain for the token cookie or null for none
+     * @param boolean $secure Whether to pass cookie only via SSL connection
+     * @param boolean $httpOnly Whether to pass to cookie only via HTTP requests
      */
-    public function __construct($name = 'csrf_token', $time = 0, $path = '/', $domain = null)
-    {
-        $this->name = $name;
-        $this->time = (int) $time;
-        $this->path = $path;
-        $this->domain = $domain;
+    public function __construct(
+        $name = 'csrf_token',
+        $time = 0,
+        $path = '/',
+        $domain = '',
+        $secure = false,
+        $httpOnly = true
+    ) {
+        $this->cookieParams = [
+            'name' => (string) $name,
+            'value' => null,
+            'time' => (int) $time,
+            'path' => (string) $path,
+            'domain' => (string) $domain,
+            'secure' => (bool) $secure,
+            'httpOnly' => (bool) $httpOnly,
+        ];
     }
 
     /**
@@ -44,17 +48,16 @@ class CookieStorage implements TokenStorage
      */
     public function storeToken($token)
     {
-        $time = $this->time == 0 ? 0 : time() + $this->time;
+        $params = $this->cookieParams;
+        $params['time'] = $params['time'] === 0 ? 0 : time() + $params['time'];
+        $params['value'] = base64_encode($token);
 
-        if ($this->domain === null) {
-            setcookie($this->name, base64_encode($token), $time, $this->path);
-        } else {
-            setcookie($this->name, base64_encode($token), $time, $this->path, $this->domain);
-        }
+        call_user_func_array('setcookie', array_values($params));
     }
 
     public function getStoredToken()
     {
-        return isset($_COOKIE[$this->name]) ? base64_decode($_COOKIE[$this->name]) : false;
+        return isset($_COOKIE[$this->cookieParams['name']])
+            ? base64_decode($_COOKIE[$this->cookieParams['name']]) : false;
     }
 }
