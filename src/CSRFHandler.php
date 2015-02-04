@@ -224,7 +224,7 @@ class CSRFHandler
      */
     private function encryptToken($token, $key)
     {
-        return hash_hmac('sha256', $token, $key, true);
+        return hash_hmac('sha256', $key, $token, true);
     }
 
     /**
