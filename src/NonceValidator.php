@@ -10,14 +10,14 @@ namespace Riimu\Kit\CSRF;
  */
 class NonceValidator extends CSRFHandler
 {
-    /** @var string Name of the session variable that stores the nonces */
+    /** @var string Name of the session variable that stores the used nonces */
     private $name;
 
     /**
      * Creates a new instance of NonceValidator.
-     * @param string $sessionVariable Name of the session variable used to store the nonces
+     * @param string $sessionVariable Name of the session variable used for storing nonces
      */
-    public function __construct($sessionVariable = 'nonces')
+    public function __construct($sessionVariable = 'csrf_nonces')
     {
         parent::__construct(false);
         $this->name = $sessionVariable;
@@ -27,18 +27,23 @@ class NonceValidator extends CSRFHandler
     {
         $key = $this->extractKey($token);
 
-        if (!isset($_SESSION[$this->name][$key])) {
+        if (isset($_SESSION[$this->name][$key])) {
             return false;
         }
 
-        unset($_SESSION[$this->name][$key]);
+        $_SESSION[$this->name][$key] = true;
         return parent::validateToken($token);
     }
 
     public function getToken()
     {
         $token = parent::getToken();
-        $_SESSION[$this->name][$this->extractKey($token)] = time();
+
+        // For usability's sake, allow the same token in the unlikely event that it gets recreated
+        if (isset($_SESSION[$this->name][$this->extractKey($token)])) {
+            unset($_SESSION[$this->name][$this->extractKey($token)]);
+        }
+
         return $token;
     }
 
@@ -46,18 +51,6 @@ class NonceValidator extends CSRFHandler
     {
         $_SESSION[$this->name] = [];
         return parent::regenerateToken();
-    }
-
-    /**
-     * Removes old nonces from the storage until limit is reached.
-     * @param integer $limit Maximum number of nonces to store
-     */
-    public function pruneStorage($limit)
-    {
-        if (count($_SESSION[$this->name]) > $limit) {
-            arsort($_SESSION[$this->name], SORT_NUMERIC);
-            $_SESSION[$this->name] = array_slice($_SESSION[$this->name], 0, $limit, true);
-        }
     }
 
     /**

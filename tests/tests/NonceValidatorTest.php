@@ -9,17 +9,19 @@ namespace Riimu\Kit\CSRF;
  */
 class NonceValidatorTest extends \PHPUnit_Framework_TestCase
 {
+    protected static $name = 'csrf_nonces';
+
     public function tearDown()
     {
         if (isset($_SESSION['csrf_token'])) {
             unset($_SESSION['csrf_token']);
         }
-        if (isset($_SESSION['nonces'])) {
-            unset($_SESSION['nonces']);
+        if (isset($_SESSION[self::$name])) {
+            unset($_SESSION[self::$name]);
         }
     }
 
-    public function testDoubleFailureOnSecondValidation()
+    public function testFailureOnSecondValidation()
     {
         $nonce = new NonceValidator();
         $token = $nonce->getToken();
@@ -28,43 +30,21 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($nonce->validateToken($token));
     }
 
-    public function testClearedNoncesOnRegeneration()
+    public function testAllowSameTokenIfReturnedAgain()
     {
         $nonce = new NonceValidator();
+        $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
 
-        $token = $nonce->getToken();
-        $this->assertNotEquals([], $_SESSION['nonces']);
+        $random->expects($this->exactly(3))->method('getBytes')->will(
+            $this->returnValue(str_repeat('A', CSRFHandler::TOKEN_LENGTH))
+        );
+        $nonce->setGenerator($random);
 
-        $nonce->regenerateToken();
-        $this->assertSame([], $_SESSION['nonces']);
+        $tokenA = $nonce->getToken();
+        $this->assertTrue($nonce->validateToken($tokenA));
 
-        $this->assertFalse($nonce->validateToken($token));
-    }
-
-    public function testClearingOldNonces()
-    {
-        $nonce = new NonceValidator();
-        $tokens = [];
-        $count = 8;
-
-        for ($i = 0; $i < $count; $i++) {
-            $tokens[] = $nonce->getToken();
-
-        }
-
-        shuffle($tokens);
-
-        foreach ($tokens as $i => $token) {
-            $_SESSION['nonces'][substr(base64_decode($token), 0, 32)] = $i;
-        }
-
-        $this->assertSame($count, count($_SESSION['nonces']));
-        $nonce->pruneStorage(2);
-        $this->assertSame(2, count($_SESSION['nonces']));
-
-        $this->assertTrue($nonce->validateToken(array_pop($tokens)));
-        $this->assertTrue($nonce->validateToken(array_pop($tokens)));
-
-        $this->assertSame(0, count($_SESSION['nonces']));
+        $tokenB = $nonce->getToken();
+        $this->assertSame($tokenA, $tokenB);
+        $this->assertTrue($nonce->validateToken($tokenB));
     }
 }
