@@ -160,7 +160,8 @@ provides protection against [Replay Attacks](https://en.wikipedia.org/wiki/Repla
 It is important to note, however, that the best defense against such attacks is
 using a secure HTTPS connection. However, if you do not have the luxury of an
 encrypted connection at your disposal, it may be possible to [use nonces]
-(http://blog.ircmaxell.com/2013/02/preventing-csrf-attacks.html) prevent them.
+(http://blog.ircmaxell.com/2013/02/preventing-csrf-attacks.html) to prevent
+these attacks.
 
 This library provides a way to implement nonces by using the `NonceValidator`
 class. This class works exactly the same as `CSRFHandler` except that it accepts
