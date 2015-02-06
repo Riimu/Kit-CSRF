@@ -1,5 +1,9 @@
 # Changelog #
 
+## v2.2.1 (2015-02-06) ##
+
+  * Implement the missing NonceValidator::getNonceCount() method.
+
 ## v2.2.0 (2015-02-04) ##
 
   * Token length is now stored in a constant CSRFHandler::TOKEN_LENGTH instead

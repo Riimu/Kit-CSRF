@@ -3,7 +3,7 @@
 namespace Riimu\Kit\CSRF;
 
 /**
- * Provides validation for tokens that are only accepted once.
+ * CSRF Handler that accepts each CSRF token only once.
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2015, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
@@ -51,6 +51,15 @@ class NonceValidator extends CSRFHandler
     {
         $_SESSION[$this->name] = [];
         return parent::regenerateToken();
+    }
+
+    /**
+     * Returns the number of stored used nonces.
+     * @return integer Number of invalidated nonces.
+     */
+    public function getNonceCount()
+    {
+        return isset($_SESSION[$this->name]) ? count($_SESSION[$this->name]) : 0;
     }
 
     /**

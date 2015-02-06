@@ -155,11 +155,12 @@ you are creating a RESTful api that takes advantage of PUT and DELETE requests.
 
 ### Using nonces ###
 
-A nonce is a token that can be used only once. If you are *not* using SSL (i.e.
-HTTPS) to secure the connection to your website, but you still need additional
-security to protect you against [Replay Attacks](https://en.wikipedia.org/wiki/Replay_attack),
-you may use [nonce behavior](http://blog.ircmaxell.com/2013/02/preventing-csrf-attacks.html)
-to prevent these types of attacks.
+A *nonce* is a token that can be used only once. Turning CSRF tokens into nonces
+provides protection against [Replay Attacks](https://en.wikipedia.org/wiki/Replay_attack).
+It is important to note, however, that the best defense against such attacks is
+using a secure HTTPS connection. However, if you do not have the luxury of an
+encrypted connection at your disposal, it may be possible to [use nonces]
+(http://blog.ircmaxell.com/2013/02/preventing-csrf-attacks.html) prevent them.
 
 This library provides a way to implement nonces by using the `NonceValidator`
 class. This class works exactly the same as `CSRFHandler` except that it accepts
@@ -182,11 +183,10 @@ $token = $csrf->getToken();
 ```
 
 Note that `NonceValidator` always uses sessions to store the CSRF token. In
-addition to that, it will also store which tokens have been used and cannot be
+addition to that, it will also store which tokens have been used up and cannot be
 used again. If you have a website that relies on a large number of form
-submissions, this array of used up tokens can grow quite large. To clear the
-array, simply regenerate the token using `regenerateToken()`. Note that the
-name of the session variable can be passed to the constructor. For example:
+submissions, this array of invalidated tokens can grow quite large. To clear this
+array, simply regenerate the token using `regenerateToken()`. For example:
  
 ```php
 <?php
@@ -194,10 +194,10 @@ name of the session variable can be passed to the constructor. For example:
 require 'vendor/autoload.php';
 
 session_start();
-$csrf = new \Riimu\Kit\CSRF\NonceValidator('csrf_nonces');
+$csrf = new \Riimu\Kit\CSRF\NonceValidator();
 $csrf->validateRequest();
 
-if (count($_SESSION['csrf_nonces']) > 100) {
+if ($csrf->getNonceCount() > 100) {
     $csrf->regenerateToken();
 }
 

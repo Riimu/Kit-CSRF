@@ -72,4 +72,13 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($tokenA, $tokenB);
         $this->assertTrue($nonce->validateToken($tokenB));
     }
+
+    public function testNonceCount()
+    {
+        $nonce = new NonceValidator();
+
+        $this->assertSame(0, $nonce->getNonceCount());
+        $nonce->validateToken($nonce->getToken());
+        $this->assertSame(1, $nonce->getNonceCount());
+    }
 }
