@@ -108,7 +108,7 @@ class CSRFHandler
      */
     public function setSources(array $sources)
     {
-        $this->sources = array_map(function(Source\TokenSource $source) {
+        $this->sources = array_map(function (Source\TokenSource $source) {
             return $source;
         }, $sources);
     }
@@ -157,9 +157,9 @@ class CSRFHandler
         if (!$this->validateRequestToken()) {
             if ($throw) {
                 throw new InvalidCSRFTokenException('Invalid CSRF token');
-            } else {
-                $this->killScript();
             }
+
+            $this->killScript();
         }
 
         return true;

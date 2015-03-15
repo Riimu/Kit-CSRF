@@ -39,7 +39,7 @@ class NonceValidator extends CSRFHandler
     {
         $token = parent::getToken();
 
-        // For usability's sake, allow the same token in the unlikely event that it gets recreated
+        // For the sake of usability, allow the same token in the unlikely event that it gets recreated
         if (isset($_SESSION[$this->name][$this->extractKey($token)])) {
             unset($_SESSION[$this->name][$this->extractKey($token)]);
         }
