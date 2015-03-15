@@ -3,22 +3,23 @@
 *CSRF* is a PHP library for preventing [Cross-Site Request Forgery]
 (https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29) attacks.
 A CSRF attack takes advantage of authenticated users by sending them to a
-malicious website that sends specially crafted requests to the targeted website
+malicious website that sends carefully crafted requests to the targeted website
 in order to modify content on that website. The attack uses the authenticated
 user's browser to send the request to bypass any authentication. This library
 prevents these attacks by requiring a CSRF token in each POST, PUT and DELETE
 request. These tokens are not known by the attacker, which prevents them from
 sending malicious requests.
 
-This library can store the CSRF tokens using cookies or sessions. In order to
-facilitate different kinds of websites and applications, the library allows
-submission of the secret token in a hidden form field or using a HTTP header.
+This library supports storing the CSRF tokens using either cookies or sessions.
+The token can also be submitted using either a hidden form field in POST
+requests or using a HTTP header, which makes it easier to pass the token in
+ajax requests.
 
 In order to provide additional security against different forms of attacks
 against the CSRF tokens, this library uses constant time string comparisons to
-prevent timing attacks and encrypts each token with a random string to prevent
-BREACH attacks. On top of that, each CSRF token and encryption key is generated
-using a secure random byte source.
+prevent timing attacks and generates random encrypted tokens in each request to
+prevent BREACH attacks. On top of that, all tokens are generated using a secure
+random byte generator.
 
 The API documentation, which can be generated using Apigen, can be read online
 at: http://kit.riimu.net/api/csrf/
@@ -77,10 +78,11 @@ it on every request. The method `getToken()` can be used to retrieve the token
 that should be included in each submitted form using a hidden field named
 `csrf_token`.
 
-If the token submitted in the form does not match the token stored in the user
-cookie, the `validateRequest()` method will send a HTTP 400 (bad request) header
-and kill the script execution. In normal use, this will not affect normal users,
-but it will prevent any CSRF attacks against your website.
+If the submitted token does not match against the secret token stored in the
+cookie or session, the `validateRequest()` method will send a HTTP 400 (bad
+request) header and kill the script execution. This should not affect the normal
+usage of your website, but it will prevent any CSRF attack attempts against
+your website.
 
 As an example, here is a simple web page that has one form that can be
 submitted:
@@ -117,6 +119,8 @@ if (!empty($_POST['my_name'])) {
  </body>
 </html>
 ```
+
+### Using Sessions ###
  
 By default, the library will save the secret token to a cookie. If you prefer
 to save the token to a session instead, you can initialize the `CSRFHandler` by
@@ -130,8 +134,10 @@ require 'vendor/autoload.php';
 $csrf = new \Riimu\Kit\CSRF\CSRFHandler(false);
 ```
 
+### Handling Invalid Tokens ###
+
 If you wish to have more control over what happens when the request sends an
-invalid token, you can set the parameter passed to `validateRequest()` to
+invalid csrf token, you can set the parameter passed to `validateRequest()` to
 `true`. This will cause the method to throw an `InvalidCSRFTokenException`
 instead of killing the script. For example:
 
@@ -149,9 +155,14 @@ try {
 }
 ```
 
-Note that if you are using ajax requests on your website, you may also provide
-the CSRF token using a `X-CSRF-Token` header. This is particularly useful, if
-you are creating a RESTful api that takes advantage of PUT and DELETE requests.
+### Using Token Headers ###
+
+Note that if you are building a REST api to your website or you are using ajax
+requests to send POST, PUT or DELETE requests, you may also provide the csrf
+token using a header.
+
+To provide the token using a header, simply include a header named `X-CSRF-Token`
+which contains the same value you would include in the `csrf_token` form field.
 
 ### Using nonces ###
 
@@ -184,8 +195,8 @@ $token = $csrf->getToken();
 ```
 
 Note that `NonceValidator` always uses sessions to store the CSRF token. In
-addition to that, it will also store which tokens have been used up and cannot be
-used again. If you have a website that relies on a large number of form
+addition to that, it will also store which tokens have been used up and cannot
+be used again. If you have a website that relies on a large number of form
 submissions, this array of invalidated tokens can grow quite large. To clear this
 array, simply regenerate the token using `regenerateToken()`. For example:
  
@@ -205,7 +216,37 @@ if ($csrf->getNonceCount() > 100) {
 $token = $csrf->getToken();
 ```
 
-### Securing Your Website ###
+### Manual Usage ###
+
+If you wish to have more control over the token validation, this library
+provides several methods that allows you to manually manage several aspects of
+the library. For your convenience, the `CSRFHandler` provides the following
+methods:
+
+  * `isValidatedRequest()` tells if the current request is a POST, PUT or
+    DELETE request which should be validated.
+    
+  * `validateRequest($throw = false)` validates the request and kills the script
+    or throws an exception if the token is invalid. The token is only validated
+    on POST, PUT and DELETE requests.
+  
+  * `validateRequestToken()` validates the token sent in the request. True is
+    returned if the token exists and it matches against the secret token.
+    
+  * `validateToken($token)` can be used to validate tokens manually. The token
+    passed to the method should be the one that has been returned by `getToken()`
+    
+  * `getToken()` returns a valid base64 encoded token.
+  
+  * `regenerateToken()` regenerates the secret CSRF token and invalidates all
+    the tokens returned previously by `getToken()`
+    
+  * `getTrueToken()` returns the stored secret CSRF token that is used to
+    validate the tokens submitted by the user.
+    
+  * `getRequestToken()` returns the token sent in the request.
+
+## Securing Your Website ##
 
 Even this library does not prevent CSRF attacks if you fail to utilize the
 tokens correctly. It is very important that each request is properly validated
@@ -226,9 +267,9 @@ this can be leaked using various different attacks. Thus, GET requests should
 never affect the state. For example, allowing users to be deleted using a simple
 GET request would make your website vulnerable to CSRF attacks.
 
-If you truly want to create a secure site, however, you must also employ SSL
-encryption, i.e. use a HTTPS connection. This is the only effective measure
-against [Man-in-the-middle](https://www.owasp.org/index.php/Man-in-the-middle_attack)
+If you truly want to create a secure site, however, you must also only use
+encrypted connections, i.e. you must use HTTPS. This is the only effective
+measure against [Man-in-the-middle](https://www.owasp.org/index.php/Man-in-the-middle_attack)
 attacks, but it also helps in preventing replay attacks.
 
 Finally, remember that CSRF tokens only protect you from external requests. They
@@ -238,58 +279,28 @@ CSRF tokens offer no additional protection. Using a XSS attack, the attacker is
 always capable of finding out the CSRF token. The security of your website only
 as strong as the weakest link.
 
-### Manual Usage ###
-
-If you wish to have more control over the token validation, this library
-provides several methods that allows you to manually manage several aspects of
-the library. For your convenience, the `CSRFHandler` provides the following
-methods:
-
-  * `isValidatedRequest()` tells if the current request is a POST, PUT or
-    DELETE request which should be validated.
-    
-  * `validateRequest($throw = false)` validates the request and kills the script
-    or throws an exception if the token is invalid. The token is only validated
-    on POST, PUT and DELETE requests.
-  
-  * `validateRequestToken()` validates the token sent in the request. True is
-    returned if the token exists and it matches the secret token.
-    
-  * `validateToken($token)` can be used to validate tokens manually. The token
-    passed to the method should be the one that has been returned by `getToken()`
-    
-  * `getToken()` returns a valid base64 encoded token.
-  
-  * `regenerateToken()` regenerates the secret CSRF token and invalidates all
-    the tokens returned previously by `getToken()`
-    
-  * `getTrueToken()` returns the stored secret CSRF token that is used to
-    validate the tokens submitted by the user.
-    
-  * `getRequestToken()` returns the token sent in the request.
-
 ## Anatomy of the CSRF tokens ##
 
-All the CSRF tokens generated by this library are random 32 byte strings. These
-strings have been generated by using the SecureRandom library in order to
-ensure that they have been generated using a secure random source. However, the
-tokens returned by `getToken()` are very different in length. This is because
-they are base64 encoded strings that also contain an encryption key for the
-token.
+All the tokens generated by this library are random 32 byte strings. These
+strings have been generated by using the SecureRandom library in order to ensure
+that they have been generated using a secure random source. However, the tokens
+returned by `getToken()` are more than double that in length. This is because
+they are base64 encoded strings that also contain a hashed version of the token
+using the secret token as a salt.
 
 In order to prevent BREACH attacks, each token returned by `getToken()` is
-different, because a static token can be used to break the encryption used by
+different, because a static token can be used to break the encryption used by a
 HTTPS connection. In order to achieve this, the returned token actually consists
-of a random encryption key and a token that has been encrypted using HMAC-SHA256
-(which also makes it infeasible to reverse the operation and find out the secret
-CSRF token). This allows each token to be different, but still valid until
-`regenerateToken()` is called. Thus, the actual length of the returned decoded 
-string is 64 bytes.
+of a random generated token and an encrypted version of that token that has been
+encrypted using HMAC-SHA256 using the secret token as the key. (which also makes
+it infeasible to reverse the operation to find out the secret token). This
+allows each token to be different, but still valid until `regenerateToken()` is
+called. Thus, the actual length of the returned decoded string is 64 bytes.
 
-Note that a new encryption key is generated every time `getToken()` is called.
+Note that a new random token is generated every time `getToken()` is called.
 Thus, each string returned by that method is different. If you have a large
-number of forms on your web page, it may be more efficient to call that method
-only once and store the result into a variable.
+number of forms on your web page, it may be more efficient to use `SingleToken`
+class, which loads the token only once and it can be casted to a string.
 
 ## Credits ##
 

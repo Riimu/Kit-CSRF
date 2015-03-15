@@ -1,5 +1,10 @@
 # Changelog #
 
+## v2.3.0 (2015-03-15) ##
+
+  * Added `SingleToken` class, which allows lazy loading the token and
+    generating only one token per request.
+
 ## v2.2.1 (2015-02-06) ##
 
   * Implement the missing NonceValidator::getNonceCount() method.
