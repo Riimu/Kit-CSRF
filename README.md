@@ -43,7 +43,7 @@ example:
 
 ```
 $ php -r "readfile('https://getcomposer.org/installer');" | php
-$ php composer.phar require riimu/kit-csrf:2.*
+$ php composer.phar require "riimu/kit-csrf:2.*"
 ```
 
 Alternatively, you can add the dependency to your `composer.json` and run
