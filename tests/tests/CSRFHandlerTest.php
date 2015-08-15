@@ -29,7 +29,7 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
     {
         $handler = new CSRFHandler(false);
         $this->assertSame(32, strlen($handler->getTrueToken()));
-        $this->assertSame(64, strlen(base64_decode($handler->getToken())));
+        $this->assertSame(64, strlen(base64_decode($handler->getToken(), true)));
     }
 
     public function testKillingScript()
@@ -44,11 +44,18 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
     public function testTokenRandomness()
     {
         $handler = $this->getHandler();
-        $token = $handler->getToken();
-        $this->assertNotEquals($token, $handler->getToken());
 
-        $handlerB = $this->getHandler();
-        $this->assertNotEquals($token, $handlerB->getToken());
+        $token = $handler->getToken();
+        $this->assertInternalType('string', $token);
+
+        $secondToken = $handler->getToken();
+        $this->assertInternalType('string', $secondToken);
+        $this->assertNotSame($token, $secondToken);
+
+        $secondHandler = $this->getHandler();
+        $thirdToken = $secondHandler->getToken();
+        $this->assertInternalType('string', $thirdToken);
+        $this->assertNotSame($token, $thirdToken);
     }
 
     public function testTokenValidation()
@@ -65,7 +72,7 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
         $handler = $this->getHandler();
         $this->assertFalse($handler->validateToken('a'));
 
-        $invalid = base64_decode($handler->getToken());
+        $invalid = base64_decode($handler->getToken(), true);
         $invalid[0] = $invalid[0] ^ "\xFF";
         $this->assertFalse($handler->validateToken(base64_encode($invalid)));
     }
@@ -116,19 +123,20 @@ class CSRFHandlerTest extends \PHPUnit_Framework_TestCase
     {
         $handler = $this->getHandler();
         $token = $handler->getToken();
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['HTTP_X_CSRF_TOKEN'] = $token;
+
+        $this->assertTrue($handler->validateRequest());
+    }
+
+    public function testNoTokenAvailable()
+    {
+        $handler = $this->getHandler();
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
-        $_SERVER['HTTP_X_CSRF_TOKEN'] = $token;
-        $this->assertTrue($handler->validateRequest());
-
-        \defineRequestHeadersFunction();
-
-        $handlerB = $this->getHandler();
-        $this->assertTrue($handlerB->validateRequest());
-        unset($_SERVER['HTTP_X_CSRF_TOKEN']);
-
         $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
-        $handlerB->validateRequest(true);
+        $handler->validateRequest(true);
     }
 
     public function testComparisonLengthFailure()

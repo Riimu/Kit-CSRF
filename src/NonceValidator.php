@@ -32,6 +32,7 @@ class NonceValidator extends CSRFHandler
         }
 
         $_SESSION[$this->name][$key] = true;
+
         return parent::validateToken($token);
     }
 
@@ -50,12 +51,13 @@ class NonceValidator extends CSRFHandler
     public function regenerateToken()
     {
         $_SESSION[$this->name] = [];
+
         return parent::regenerateToken();
     }
 
     /**
      * Returns the number of stored used nonces.
-     * @return integer Number of invalidated nonces.
+     * @return int Number of invalidated nonces.
      */
     public function getNonceCount()
     {
@@ -69,6 +71,6 @@ class NonceValidator extends CSRFHandler
      */
     private function extractKey($token)
     {
-        return substr(base64_decode($token), 0, CSRFHandler::TOKEN_LENGTH);
+        return substr(base64_decode($token, true), 0, CSRFHandler::TOKEN_LENGTH);
     }
 }

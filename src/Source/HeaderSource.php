@@ -11,7 +11,7 @@ namespace Riimu\Kit\CSRF\Source;
 class HeaderSource implements TokenSource
 {
     /** @var string Name of the custom header used to send the csrf token */
-    private $headerName;
+    private $header;
 
     /**
      * Creates a new instance of HeaderSource.
@@ -19,20 +19,40 @@ class HeaderSource implements TokenSource
      */
     public function __construct($headerName = 'X-CSRF-Token')
     {
-        $this->headerName = $headerName;
+        $this->header = $headerName;
     }
 
     public function getRequestToken()
     {
-        if (function_exists('apache_request_headers')) {
-            $token = $this->getHeader($this->headerName, apache_request_headers());
+        $token = $this->getHeader($this->header, $this->getRequestHeaders());
 
-            if ($token !== false) {
-                return $token;
-            }
+        if ($token === false) {
+            $header = 'HTTP_' . str_replace('-', '_', $this->header);
+            $token = $this->getHeader($header, $this->getServerHeaders());
         }
 
-        return $this->getHeader('HTTP_' . str_replace('-', '_', $this->headerName), $_SERVER);
+        return $token;
+    }
+
+    /**
+     * Returns headers provided in the request as is.
+     * @return array Associative array of request headers
+     */
+    protected function getRequestHeaders()
+    {
+        $headers = function_exists('apache_request_headers')
+            ? apache_request_headers() : [];
+
+        return is_array($headers) ? $headers : [];
+    }
+
+    /**
+     * Returns the server data array with header information.
+     * @return array Server data array
+     */
+    protected function getServerHeaders()
+    {
+        return isset($_SERVER) ? $_SERVER : [];
     }
 
     /**
@@ -46,6 +66,6 @@ class HeaderSource implements TokenSource
         $headers = array_change_key_case($headers);
         $name = strtolower($name);
 
-        return isset($headers[$name]) ? $headers[$name] : false;
+        return isset($headers[$name]) ? (string) $headers[$name] : false;
     }
 }

@@ -18,7 +18,7 @@ use Riimu\Kit\SecureRandom\SecureRandom;
  */
 class CSRFHandler
 {
-    /** @var integer Number of bytes used in the CSRF token */
+    /** @var int Number of bytes used in the CSRF token */
     const TOKEN_LENGTH = 32;
 
     /** @var string[] List of request methods that need to be validated for the CSRF token */
@@ -48,7 +48,7 @@ class CSRFHandler
      * be loaded until the token is validated, though. By default, the handler
      * will also use post and header data to look for submitted tokens.
      *
-     * @param boolean $useCookies True for cookie storage, false for session storage
+     * @param bool $useCookies True for cookie storage, false for session storage
      */
     public function __construct($useCookies = true)
     {
@@ -115,11 +115,11 @@ class CSRFHandler
 
     /**
      * Tells if the request method indicates that the CSRF token should be validated.
-     * @return boolean True if the token should be validated, false if not
+     * @return bool True if the token should be validated, false if not
      */
     public function isValidatedRequest()
     {
-        return in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods);
+        return in_array($_SERVER['REQUEST_METHOD'], $this->validatedMethods, true);
     }
 
     /**
@@ -141,8 +141,8 @@ class CSRFHandler
      * sent. If you are using the session storage instead, you must start the
      * session before calling this method.
      *
-     * @param boolean $throw True to throw an exception on invalid token, false to kill the script
-     * @return boolean This method always returns true
+     * @param bool $throw True to throw an exception on invalid token, false to kill the script
+     * @return bool This method always returns true
      * @throws InvalidCSRFTokenException If throwing is enabled and the csrf token is invalid
      */
     public function validateRequest($throw = false)
@@ -151,7 +151,7 @@ class CSRFHandler
         $this->getTrueToken();
 
         if (!$this->isValidatedRequest()) {
-             return true;
+            return true;
         }
 
         if (!$this->validateRequestToken()) {
@@ -177,11 +177,12 @@ class CSRFHandler
 
     /**
      * Validates the token sent in the request.
-     * @return boolean True if the token sent in the request is valid, false if not
+     * @return bool True if the token sent in the request is valid, false if not
      */
     public function validateRequestToken()
     {
         $token = $this->getRequestToken();
+
         return is_string($token) && $this->validateToken($token);
     }
 
@@ -193,7 +194,7 @@ class CSRFHandler
      * exact same string that has been returned by the `getToken()` method.
      *
      * @param string $token The base64 encoded token provided by getToken()
-     * @return boolean True if the token is valid, false if it is not
+     * @return bool True if the token is valid, false if it is not
      */
     public function validateToken($token)
     {
@@ -201,7 +202,7 @@ class CSRFHandler
             return false;
         }
 
-        $token = base64_decode($token);
+        $token = base64_decode($token, true);
 
         if (strlen($token) !== self::TOKEN_LENGTH * 2) {
             return false;
@@ -240,6 +241,7 @@ class CSRFHandler
     public function getToken()
     {
         $key = $this->getGenerator()->getBytes(self::TOKEN_LENGTH);
+
         return base64_encode($key . $this->encryptToken($this->getTrueToken(), $key));
     }
 
@@ -307,7 +309,7 @@ class CSRFHandler
      * Compares two string in constant time.
      * @param string $knownString String known to be correct by the system
      * @param string $userString String submitted by the user for comparison
-     * @return boolean True if the strings are equal, false if not
+     * @return bool True if the strings are equal, false if not
      */
     private function compareStrings($knownString, $userString)
     {

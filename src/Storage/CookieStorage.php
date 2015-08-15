@@ -16,11 +16,11 @@ class CookieStorage implements TokenStorage
     /**
      * Creates a new instance of CookieStorage.
      * @param string $name Name of the cookie used to store the token
-     * @param integer $time Lifetime of the token cookie in seconds
+     * @param int $time Lifetime of the token cookie in seconds
      * @param string $path Path for the token cookie
      * @param string|null $domain Domain for the token cookie or null for none
-     * @param boolean $secure Whether to pass cookie only via SSL connection
-     * @param boolean $httpOnly Whether to pass to cookie only via HTTP requests
+     * @param bool $secure Whether to pass cookie only via SSL connection
+     * @param bool $httpOnly Whether to pass to cookie only via HTTP requests
      */
     public function __construct(
         $name = 'csrf_token',
@@ -31,12 +31,12 @@ class CookieStorage implements TokenStorage
         $httpOnly = true
     ) {
         $this->cookieParams = [
-            'name' => (string) $name,
-            'value' => null,
-            'time' => (int) $time,
-            'path' => (string) $path,
-            'domain' => (string) $domain,
-            'secure' => (bool) $secure,
+            'name'     => (string) $name,
+            'value'    => null,
+            'time'     => (int) $time,
+            'path'     => (string) $path,
+            'domain'   => (string) $domain,
+            'secure'   => (bool) $secure,
             'httpOnly' => (bool) $httpOnly,
         ];
     }
@@ -58,6 +58,7 @@ class CookieStorage implements TokenStorage
     public function getStoredToken()
     {
         return isset($_COOKIE[$this->cookieParams['name']])
-            ? base64_decode($_COOKIE[$this->cookieParams['name']]) : false;
+            ? base64_decode($_COOKIE[$this->cookieParams['name']], true)
+            : false;
     }
 }

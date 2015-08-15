@@ -10,5 +10,4 @@ namespace Riimu\Kit\CSRF;
  */
 class InvalidCSRFTokenException extends \UnexpectedValueException
 {
-
 }

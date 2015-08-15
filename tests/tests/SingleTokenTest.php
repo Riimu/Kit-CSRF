@@ -42,7 +42,6 @@ class SingleTokenTest extends \PHPUnit_Framework_TestCase
 
     private function getToken()
     {
-        $csrf = new CSRFHandler(false);
-        return new SingleToken($csrf);
+        return new SingleToken(new CSRFHandler(false));
     }
 }
