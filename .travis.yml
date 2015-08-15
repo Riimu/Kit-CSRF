@@ -1,17 +1,27 @@
 language: php
+sudo: false
 
 php:
   - 5.6
   - 5.5
   - 5.4
 
-before_script:
-  - composer install
-  - composer require "satooshi/php-coveralls dev-master"
+cache:
+  directories:
+  - vendor
+
+before_install:
+  - composer self-update
+
+install:
+  - composer require --no-update --no-interaction "phpunit/phpunit:4.*" "squizlabs/php_codesniffer:2.*" "fabpot/php-cs-fixer:1.*"
+  - travis_retry composer install --no-interaction
+  - travis_retry wget https://scrutinizer-ci.com/ocular.phar
 
 script:
-  - mkdir -p build/logs
-  - phpunit --coverage-clover build/logs/clover.xml
+  - vendor/bin/phpunit --coverage-clover=coverage.clover
+  - vendor/bin/phpcs --standard=PSR2 src tests
+  - vendor/bin/php-cs-fixer fix --dry-run --diff
 
 after_script:
-  - php vendor/bin/coveralls -v
+  - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
