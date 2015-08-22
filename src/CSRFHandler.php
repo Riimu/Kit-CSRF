@@ -143,7 +143,8 @@ class CSRFHandler
      *
      * @param bool $throw True to throw an exception on invalid token, false to kill the script
      * @return bool This method always returns true
-     * @throws InvalidCSRFTokenException If throwing is enabled and the csrf token is invalid
+     * @throws InvalidCSRFTokenException If throwing is enabled and there is no valid csrf token
+     * @throws Storage\TokenStorageException If the secret token cannot be loaded or stored
      */
     public function validateRequest($throw = false)
     {
@@ -178,6 +179,7 @@ class CSRFHandler
     /**
      * Validates the token sent in the request.
      * @return bool True if the token sent in the request is valid, false if not
+     * @throws Storage\TokenStorageException If the secret token cannot be loaded or stored
      */
     public function validateRequestToken()
     {
@@ -195,6 +197,7 @@ class CSRFHandler
      *
      * @param string $token The base64 encoded token provided by getToken()
      * @return bool True if the token is valid, false if it is not
+     * @throws Storage\TokenStorageException If the secret token cannot be loaded or stored
      */
     public function validateToken($token)
     {
@@ -237,6 +240,7 @@ class CSRFHandler
      * is called.
      *
      * @return string Base64 encoded CSRF token
+     * @throws Storage\TokenStorageException If the secret token cannot be loaded or stored
      */
     public function getToken()
     {
@@ -253,6 +257,7 @@ class CSRFHandler
      * recommended to regenerate the CSRF token after any user authentication.
      *
      * @return CSRFHandler Returns self for call chaining
+     * @throws Storage\TokenStorageException If the secret token cannot be stored
      */
     public function regenerateToken()
     {
@@ -273,6 +278,7 @@ class CSRFHandler
      * validate the CSRF tokens submitted in requests.
      *
      * @return string The current actual CSRF token
+     * @throws Storage\TokenStorageException If the secret token cannot be loaded or stored
      */
     public function getTrueToken()
     {
