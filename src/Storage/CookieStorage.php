@@ -49,7 +49,7 @@ class CookieStorage implements TokenStorage
         }
 
         if (!$this->setCookie(base64_encode($token), $params)) {
-            throw new TokenStorageException("Error setting CSRF token cookie");
+            throw new TokenStorageException('Error setting CSRF token cookie');
         }
     }
 
@@ -64,7 +64,7 @@ class CookieStorage implements TokenStorage
     protected function setCookie($value, array $params)
     {
         if (headers_sent()) {
-            throw new TokenStorageException("Cannot store CSRF token, headers already sent");
+            throw new TokenStorageException('Cannot store CSRF token, headers already sent');
         }
 
         return setcookie(

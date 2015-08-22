@@ -60,6 +60,7 @@ class HandlerTestCase extends \PHPUnit_Framework_TestCase
         $storage = $this->getMock('Riimu\Kit\CSRF\Storage\CookieStorage', ['setCookie']);
         $storage->method('setCookie')->will($this->returnCallback(function ($value, $params) {
             $_COOKIE[$params['name']] = $value;
+
             return true;
         }));
 

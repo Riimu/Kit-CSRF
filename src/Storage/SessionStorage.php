@@ -25,7 +25,7 @@ class SessionStorage implements TokenStorage
     public function storeToken($token)
     {
         if (!$this->isSessionActive()) {
-            throw new TokenStorageException("Error storing CSRF token, no session active");
+            throw new TokenStorageException('Error storing CSRF token, no session active');
         }
 
         $_SESSION[$this->name] = base64_encode($token);
@@ -43,7 +43,7 @@ class SessionStorage implements TokenStorage
     public function getStoredToken()
     {
         if (!$this->isSessionActive()) {
-            throw new TokenStorageException("Cannot load CSRF token, no session active");
+            throw new TokenStorageException('Cannot load CSRF token, no session active');
         } elseif (isset($_SESSION[$this->name])) {
             return base64_decode($_SESSION[$this->name], true);
         }
