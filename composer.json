@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Riimu\\Kit\\CSRF\\": "src/"
+            "Riimu\\Kit\\CSRF\\": ["src/", "tests/tests/"]
         }
     }
 }

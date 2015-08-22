@@ -7,23 +7,13 @@ namespace Riimu\Kit\CSRF;
  * @copyright Copyright (c) 2015, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class NonceValidatorTest extends \PHPUnit_Framework_TestCase
+class NonceValidatorTest extends HandlerTestCase
 {
     protected static $name = 'csrf_nonces';
 
-    public function tearDown()
-    {
-        if (isset($_SESSION['csrf_token'])) {
-            unset($_SESSION['csrf_token']);
-        }
-        if (isset($_SESSION[self::$name])) {
-            unset($_SESSION[self::$name]);
-        }
-    }
-
     public function testFailureOnSecondValidation()
     {
-        $nonce = new NonceValidator();
+        $nonce = $this->getNonceValidator();
         $token = $nonce->getToken();
 
         $this->assertTrue($nonce->validateToken($token));
@@ -32,7 +22,7 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
 
     public function testAllowSameTokenIfReturnedAgain()
     {
-        $nonce = new NonceValidator();
+        $nonce = $this->getNonceValidator();
         $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
 
         $random->expects($this->exactly(3))->method('getBytes')->will(
@@ -50,7 +40,7 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
 
     public function testAllowSameTokenAfterRegeneration()
     {
-        $nonce = new NonceValidator();
+        $nonce = $this->getNonceValidator();
         $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
 
         $random->expects($this->exactly(5))->method('getBytes')->will($this->onConsecutiveCalls(
@@ -75,10 +65,21 @@ class NonceValidatorTest extends \PHPUnit_Framework_TestCase
 
     public function testNonceCount()
     {
-        $nonce = new NonceValidator();
+        $nonce = $this->getNonceValidator();
 
         $this->assertSame(0, $nonce->getNonceCount());
         $nonce->validateToken($nonce->getToken());
         $this->assertSame(1, $nonce->getNonceCount());
+    }
+
+    private function getNonceValidator()
+    {
+        $storage = $this->getMock('Riimu\Kit\CSRF\Storage\SessionStorage', ['isSessionActive']);
+        $storage->method('isSessionActive')->will($this->returnValue(true));
+
+        $validator = new NonceValidator();
+        $validator->setStorage($storage);
+
+        return $validator;
     }
 }

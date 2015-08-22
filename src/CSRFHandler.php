@@ -21,7 +21,7 @@ class CSRFHandler
     /** @var int Number of bytes used in the CSRF token */
     const TOKEN_LENGTH = 32;
 
-    /** @var string[] List of request methods that need to be validated for the CSRF token */
+    /** @var string[] List of request methods to validate for the CSRF token */
     protected $validatedMethods = ['POST', 'PUT', 'DELETE'];
 
     /** @var SecureRandom Secure random generator for generating secure random bytes */

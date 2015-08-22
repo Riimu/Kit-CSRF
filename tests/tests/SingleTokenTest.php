@@ -7,15 +7,8 @@ namespace Riimu\Kit\CSRF;
  * @copyright Copyright (c) 2015, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class SingleTokenTest extends \PHPUnit_Framework_TestCase
+class SingleTokenTest extends HandlerTestCase
 {
-    public function tearDown()
-    {
-        if (isset($_SESSION['csrf_token'])) {
-            unset($_SESSION['csrf_token']);
-        }
-    }
-
     public function testLazyLoading()
     {
         $token = $this->getToken();
@@ -42,6 +35,6 @@ class SingleTokenTest extends \PHPUnit_Framework_TestCase
 
     private function getToken()
     {
-        return new SingleToken(new CSRFHandler(false));
+        return new SingleToken($this->getSessionHandler());
     }
 }

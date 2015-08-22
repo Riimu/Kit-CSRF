@@ -3,7 +3,7 @@
 namespace Riimu\Kit\CSRF\Storage;
 
 /**
- * Interface for a persistent token storage, which is used to store the actual token.
+ * Interface for a persistent token storage.
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2014, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
@@ -11,14 +11,17 @@ namespace Riimu\Kit\CSRF\Storage;
 interface TokenStorage
 {
     /**
-     * Stores the actual CSRF token in the persistent storage.
-     * @param string $token The actual CSRF token
+     * Stores the CSRF token in the persistent storage.
+     * @param string $token The CSRF token to store
+     * @return void
+     * @throws TokenStorageException If the token cannot be successfully stored
      */
     public function storeToken($token);
 
     /**
-     * Loads the actual CSRF token from the persistent storage.
+     * Loads the CSRF token from the persistent storage.
      * @return string|false The stored token or false if none is stored
+     * @throws TokenStorageException If the token cannot be successfully loaded
      */
     public function getStoredToken();
 }
