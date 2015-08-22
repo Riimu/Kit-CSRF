@@ -33,7 +33,7 @@ at: http://kit.riimu.net/api/csrf/
 In order to use this library, the following requirements must be met:
 
   * PHP version 5.4
-  * [SecureRandom](https://github.com/Riimu/Kit-SecureRandom) library is required
+  * [Kit-SecureRandom](https://github.com/Riimu/Kit-SecureRandom) library is required
 
 ## Installation ##
 
@@ -72,6 +72,10 @@ do this, you must download the [latest release](https://github.com/Riimu/Kit-CSR
 and extract the `src` folder from the archive to your project folder. To load
 the library, you can simply include the `src/autoload.php` file that was
 provided in the archive.
+
+Note that if you install this library manually, you must also install the
+dependencies by yourself. Installing the library via Composer also installs the
+dependencies for you.
 
 ## Usage ##
 

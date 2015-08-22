@@ -1,5 +1,12 @@
 # Changelog #
 
+## v2.4.0 (2015-08-22) ##
+
+  * Various methods will now throw an `TokenStorageException` if the secret
+    token cannot be appropriately stored or loaded.
+  * Some documentation has been clarified and tests have been improved to better
+    cover different use cases.
+
 ## v2.3.0 (2015-03-15) ##
 
   * Added `SingleToken` class, which allows lazy loading the token and
