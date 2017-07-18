@@ -2,6 +2,9 @@
 
 namespace Riimu\Kit\CSRF;
 
+use Riimu\Kit\CSRF\Storage\TokenStorageException;
+use Riimu\Kit\SecureRandom\SecureRandom;
+
 /**
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2014, Riikka Kalliomäki
@@ -18,7 +21,10 @@ class CSRFHandlerTest extends HandlerTestCase
 
     public function testKillingScript()
     {
-        $mock = $this->getMock('Riimu\Kit\CSRF\CSRFHandler', ['killScript', 'getTrueToken']);
+        $mock = $this->getMockBuilder(CSRFHandler::class)
+            ->setMethods(['killScript', 'getTrueToken'])
+            ->getMock();
+
         $mock->expects($this->once())->method('killScript');
 
         $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -73,6 +79,8 @@ class CSRFHandlerTest extends HandlerTestCase
     }
 
     /**
+     * @param string $method The HTTP method test
+     * @param bool $validated Whether the method should be validated or not
      * @dataProvider getMethods
      */
     public function testMethodValidation($method, $validated)
@@ -126,7 +134,7 @@ class CSRFHandlerTest extends HandlerTestCase
         $_POST['csrf_token'] = $handler->getToken();
         $handler->regenerateToken();
 
-        $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
+        $this->expectException(InvalidCSRFTokenException::class);
         $handler->validateRequest(true);
     }
 
@@ -135,7 +143,7 @@ class CSRFHandlerTest extends HandlerTestCase
         $handler = $this->getSessionHandler();
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
-        $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
+        $this->expectException(InvalidCSRFTokenException::class);
         $handler->validateRequest(true);
     }
 
@@ -178,7 +186,10 @@ class CSRFHandlerTest extends HandlerTestCase
     {
         $handler = $this->getSessionHandler();
 
-        $mock = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
+        $mock = $this->getMockBuilder(SecureRandom::class)
+            ->setMethods(['getBytes'])
+            ->getMock();
+
         $mock->expects($this->once())->method('getBytes')->with(32)->will($this->returnValue(str_repeat(chr(0), 32)));
 
         $handler->setGenerator($mock);
@@ -193,7 +204,7 @@ class CSRFHandlerTest extends HandlerTestCase
         $_POST['csrf_token'] = $handler->getToken();
         $_SERVER['REQUEST_METHOD'] = 'POST';
 
-        $this->setExpectedException('Riimu\Kit\CSRF\InvalidCSRFTokenException');
+        $this->expectException(InvalidCSRFTokenException::class);
         $handler->validateRequest(true);
     }
 
@@ -201,7 +212,7 @@ class CSRFHandlerTest extends HandlerTestCase
     {
         $handler = new CSRFHandler(true);
 
-        $this->setExpectedException('Riimu\Kit\CSRF\Storage\TokenStorageException');
+        $this->expectException(TokenStorageException::class);
         $handler->getToken();
     }
 
@@ -209,7 +220,7 @@ class CSRFHandlerTest extends HandlerTestCase
     {
         $handler = new CSRFHandler(false);
 
-        $this->setExpectedException('Riimu\Kit\CSRF\Storage\TokenStorageException');
+        $this->expectException(TokenStorageException::class);
         $handler->getToken();
     }
 

@@ -2,6 +2,9 @@
 
 namespace Riimu\Kit\CSRF;
 
+use Riimu\Kit\CSRF\Storage\SessionStorage;
+use Riimu\Kit\SecureRandom\SecureRandom;
+
 /**
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2015, Riikka Kalliomäki
@@ -23,7 +26,9 @@ class NonceValidatorTest extends HandlerTestCase
     public function testAllowSameTokenIfReturnedAgain()
     {
         $nonce = $this->getNonceValidator();
-        $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
+        $random = $this->getMockBuilder(SecureRandom::class)
+            ->setMethods(['getBytes'])
+            ->getMock();
 
         $random->expects($this->exactly(3))->method('getBytes')->will(
             $this->returnValue(str_repeat('A', CSRFHandler::TOKEN_LENGTH))
@@ -41,7 +46,9 @@ class NonceValidatorTest extends HandlerTestCase
     public function testAllowSameTokenAfterRegeneration()
     {
         $nonce = $this->getNonceValidator();
-        $random = $this->getMock('Riimu\Kit\SecureRandom\SecureRandom', ['getBytes']);
+        $random = $this->getMockBuilder(SecureRandom::class)
+            ->setMethods(['getBytes'])
+            ->getMock();
 
         $random->expects($this->exactly(5))->method('getBytes')->will($this->onConsecutiveCalls(
             str_repeat('A', CSRFHandler::TOKEN_LENGTH),
@@ -74,7 +81,10 @@ class NonceValidatorTest extends HandlerTestCase
 
     private function getNonceValidator()
     {
-        $storage = $this->getMock('Riimu\Kit\CSRF\Storage\SessionStorage', ['isSessionActive']);
+        $storage = $this->getMockBuilder(SessionStorage::class)
+            ->setMethods(['isSessionActive'])
+            ->getMock();
+
         $storage->method('isSessionActive')->will($this->returnValue(true));
 
         $validator = new NonceValidator();

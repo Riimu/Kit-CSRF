@@ -57,7 +57,7 @@ class NonceValidator extends CSRFHandler
 
     /**
      * Returns the number of stored used nonces.
-     * @return int Number of invalidated nonces.
+     * @return int Number of invalidated nonces
      */
     public function getNonceCount()
     {

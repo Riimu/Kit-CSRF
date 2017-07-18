@@ -2,12 +2,16 @@
 
 namespace Riimu\Kit\CSRF;
 
+use PHPUnit\Framework\TestCase;
+use Riimu\Kit\CSRF\Storage\CookieStorage;
+use Riimu\Kit\CSRF\Storage\SessionStorage;
+
 /**
  * @author Riikka Kalliomäki <riikka.kalliomaki@gmail.com>
  * @copyright Copyright (c) 2015, Riikka Kalliomäki
  * @license http://opensource.org/licenses/mit-license.php MIT License
  */
-class HandlerTestCase extends \PHPUnit_Framework_TestCase
+class HandlerTestCase extends TestCase
 {
     private static $state = ['_SERVER', '_SESSION', '_COOKIE', '_POST'];
 
@@ -42,8 +46,11 @@ class HandlerTestCase extends \PHPUnit_Framework_TestCase
     {
         $handler = new CSRFHandler(false);
 
-        $storage = $this->getMock('Riimu\Kit\CSRF\Storage\SessionStorage', ['isSessionActive']);
-        $storage->method('isSessionActive')->will($this->returnValue(true));
+        $storage = $this->getMockBuilder(SessionStorage::class)
+            ->setMethods(['isSessionActive'])
+            ->getMock();
+
+        $storage->method('isSessionActive')->willReturn(true);
         $handler->setStorage($storage);
 
         return $handler;
@@ -57,7 +64,10 @@ class HandlerTestCase extends \PHPUnit_Framework_TestCase
     {
         $handler = new CSRFHandler(true);
 
-        $storage = $this->getMock('Riimu\Kit\CSRF\Storage\CookieStorage', ['setCookie']);
+        $storage = $this->getMockBuilder(CookieStorage::class)
+            ->setMethods(['setCookie'])
+            ->getMock();
+
         $storage->method('setCookie')->will($this->returnCallback(function ($value, $params) {
             $_COOKIE[$params['name']] = $value;
 

@@ -104,7 +104,7 @@ class CSRFHandler
      * Multiple sources can be added using an array. The handler will look for
      * the token from the sources in the order they appear in the array.
      *
-     * @param Source\TokenSource[] $sources List of token sources.
+     * @param Source\TokenSource[] $sources List of token sources
      */
     public function setSources(array $sources)
     {
