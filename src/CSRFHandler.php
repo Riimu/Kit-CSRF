@@ -2,6 +2,7 @@
 
 namespace Riimu\Kit\CSRF;
 
+use Riimu\Kit\CSRF\Storage\CookieStorage;
 use Riimu\Kit\SecureRandom\SecureRandom;
 
 /**
@@ -49,10 +50,17 @@ class CSRFHandler
      * will also use post and header data to look for submitted tokens.
      *
      * @param bool $useCookies True for cookie storage, false for session storage
+     * @param CookieStorage $cookieStorage If provided and $useCookies is true, this will be used instead of a Cookie
+     *                                     with default options.
      */
-    public function __construct($useCookies = true)
+    public function __construct($useCookies = true, CookieStorage $cookieStorage = null)
     {
-        $this->storage = $useCookies ? new Storage\CookieStorage() : new Storage\SessionStorage();
+        if ($useCookies) {
+            $this->storage = $cookieStorage ?: new Storage\CookieStorage();
+        } else {
+            $this->storage = new Storage\SessionStorage();
+        }
+
         $this->sources = [
             new Source\PostSource(),
             new Source\HeaderSource(),
