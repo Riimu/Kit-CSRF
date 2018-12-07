@@ -29,7 +29,7 @@ if (!empty($_POST['my_name'])) {
 ?>
   <h3>Form with a CSRF token:</h3>
   <form method="post"><div>
-    <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($token, ENT_QUOTES | ENT_HTML5, 'UTF-8')?>" />
+    <input type="hidden" name="csrf_token" value="<?php htmlspecialchars($token, ENT_QUOTES | ENT_HTML5, 'UTF-8'); ?>" />
    What is your name?
    <input type="text" name="my_name" />
    <input type="submit" />
